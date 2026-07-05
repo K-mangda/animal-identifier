@@ -205,7 +205,7 @@ export default function HomePage() {
           )}
 
           {activeNav === "settings" && (
-            <SettingsPanel lang={lang} />
+            <SettingsPanel lang={lang} setLang={setLang} />
           )}
         </div>
       </div>

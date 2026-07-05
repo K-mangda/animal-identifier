@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import styles from "@/app/page.module.css";
-import { Settings, Leaf } from "lucide-react";
+import { Settings, Leaf, Globe } from "lucide-react";
 
-export default function SettingsPanel({ lang }: { lang: "en" | "th" }) {
+export default function SettingsPanel({ lang, setLang }: { lang: "en" | "th", setLang: (l: "en"|"th") => void }) {
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
 
   useEffect(() => {
@@ -71,6 +71,27 @@ export default function SettingsPanel({ lang }: { lang: "en" | "th" }) {
               transition: "left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
             }} />
           </button>
+        </div>
+
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.1)", margin: "20px 0" }} />
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Globe size={24} className={styles.iconTint} />
+            <div>
+              <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#fff", margin: 0 }}>
+                {lang === "en" ? "Language" : "ภาษา"}
+              </h3>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "4px 0 0" }}>
+                {lang === "en" ? "Choose your preferred language" : "เลือกภาษาที่คุณต้องการใช้งาน"}
+              </p>
+            </div>
+          </div>
+          
+          <div className={styles.langToggle}>
+            <button className={`${styles.langBtn} ${lang === "en" ? styles.langActive : ""}`} onClick={() => setLang("en")}>EN</button>
+            <button className={`${styles.langBtn} ${lang === "th" ? styles.langActive : ""}`} onClick={() => setLang("th")}>TH</button>
+          </div>
         </div>
       </div>
     </div>
