@@ -480,28 +480,48 @@
   gap: 1rem;
 }
 .langToggle {
+  position: relative;
   display: flex;
   background: rgba(60, 100, 40, 0.12);
   border-radius: 8px;
   padding: 2px;
+  width: 76px;
+}
+.langToggle::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 36px;
+  background: rgba(74, 180, 60, 0.18);
+  border-radius: 6px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.langToggle[data-active="en"]::before {
+  transform: translateX(0);
+}
+.langToggle[data-active="th"]::before {
+  transform: translateX(36px);
 }
 .langBtn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
   background: transparent;
   border: none;
   color: var(--text-3);
   font-size: 0.7rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 0;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.3s ease;
   font-family: var(--font-h);
 }
 .langBtn:hover {
   color: var(--text-2);
 }
 .langActive {
-  background: rgba(74, 180, 60, 0.18);
   color: var(--forest);
 }
 

@@ -88,7 +88,7 @@ export default function SettingsPanel({ lang, setLang }: { lang: "en" | "th", se
             </div>
           </div>
           
-          <div className={styles.langToggle}>
+          <div className={styles.langToggle} data-active={lang}>
             <button className={`${styles.langBtn} ${lang === "en" ? styles.langActive : ""}`} onClick={() => setLang("en")}>EN</button>
             <button className={`${styles.langBtn} ${lang === "th" ? styles.langActive : ""}`} onClick={() => setLang("th")}>TH</button>
           </div>
