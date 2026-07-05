@@ -7,7 +7,7 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 const prompt = Prompt({ weight: ["400", "500", "600", "700"], subsets: ["thai", "latin"], variable: "--font-prompt" });
 
 export const metadata: Metadata = {
-  title: "Species Identifier — AI Analysis",
+  title: "What is this animal?",
   description:
     "Identify any animal instantly using Google Gemini AI. Upload a photo to get species details, conservation status, habitat, and fascinating facts.",
   keywords: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Species Identifier" }],
   openGraph: {
-    title: "Species Identifier — AI Analysis",
+    title: "What is this animal?",
     description:
       "Identify any animal instantly using Google Gemini AI. Upload a photo to get species details, conservation status, habitat, and fascinating facts.",
     type: "website",

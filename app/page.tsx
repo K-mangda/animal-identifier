@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Home, Clock, Heart, Settings, Camera,
   MapPin, Utensils, Globe, Clock3,
-  AlertTriangle, Info, CheckCircle2, ArrowUpRight, ArrowLeft,
+  AlertTriangle, Info, CheckCircle2, ArrowLeft,
   Scale, Activity, Leaf, ShieldAlert, Search
 } from "lucide-react";
 import styles from "./page.module.css";
@@ -35,6 +35,326 @@ function PawIcon({ size = 20 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
       <path d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z" />
     </svg>
+  );
+}
+
+/* ─── Interactive Forest Canvas ──────────────────────── */
+function ForestCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -9999, y: -9999 });
+  const animRef = useRef<number>(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    const onResize = () => {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W;
+      canvas.height = H;
+    };
+    window.addEventListener("resize", onResize);
+
+    const onMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", onMouseMove);
+
+    // ── Fireflies ──
+    interface Firefly {
+      x: number; y: number;
+      vx: number; vy: number;
+      r: number;
+      alpha: number; alphaDir: number;
+      hue: number; // 80-140 green range
+      glowSize: number;
+    }
+    const FIREFLY_COUNT = 55;
+    const fireflies: Firefly[] = Array.from({ length: FIREFLY_COUNT }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: Math.random() * 1.8 + 0.8,
+      alpha: Math.random(),
+      alphaDir: Math.random() > 0.5 ? 1 : -1,
+      hue: 90 + Math.random() * 50,
+      glowSize: Math.random() * 8 + 4,
+    }));
+
+    // ── Leaf shape helper ──
+    function drawLeaf(
+      ctx: CanvasRenderingContext2D,
+      cx: number, cy: number,
+      len: number, width: number,
+      angle: number,
+      r: number, g: number, b: number, alpha: number
+    ) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+
+      // Simple leaf shape (reduced detail)
+      ctx.beginPath();
+      ctx.moveTo(0, -len / 2);
+      ctx.quadraticCurveTo(width, 0, 0, len / 2);
+      ctx.quadraticCurveTo(-width, 0, 0, -len / 2);
+      ctx.closePath();
+
+      // Solid color fill (no gradient)
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ── Falling Leaves ──
+    interface FallingLeaf {
+      x: number; y: number;
+      vx: number; vy: number;
+      angle: number; angularV: number;
+      len: number; width: number;
+      r: number; g: number; b: number;
+      alpha: number;
+      wobble: number; wobbleSpeed: number;
+      // repulsion
+      rx: number; ry: number;
+    }
+
+    const LEAF_COUNT = 22;
+    const leafColors = [
+      [55, 140, 38],   // mid green
+      [40, 120, 28],   // dark green
+      [70, 160, 45],   // bright green
+      [100, 150, 35],  // yellow-green
+      [140, 110, 30],  // golden-brown (autumn)
+      [60, 130, 40],   // forest green
+    ];
+    const makeLeaf = (): FallingLeaf => {
+      const [r, g, b] = leafColors[Math.floor(Math.random() * leafColors.length)];
+      return {
+        x: Math.random() * W,
+        y: -Math.random() * H * 0.5 - 30,
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: Math.random() * 0.8 + 0.4,
+        angle: Math.random() * Math.PI * 2,
+        angularV: (Math.random() - 0.5) * 0.025,
+        len: Math.random() * 20 + 12,
+        width: 0,
+        r, g, b,
+        alpha: Math.random() * 0.4 + 0.3,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: Math.random() * 0.02 + 0.008,
+        rx: 0, ry: 0,
+      };
+    };
+    const leaves: FallingLeaf[] = Array.from({ length: LEAF_COUNT }, makeLeaf);
+    leaves.forEach(l => { l.width = l.len * 0.42; l.y = Math.random() * H; });
+
+    const REPEL_RADIUS = 120;
+    const REPEL_FORCE = 4.5;
+
+    let t = 0;
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      t += 0.016;
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+
+      // ── Draw & update fireflies ──
+      for (const f of fireflies) {
+        // Wander
+        f.vx += (Math.random() - 0.5) * 0.04;
+        f.vy += (Math.random() - 0.5) * 0.04;
+        // Clamp speed
+        const spd = Math.sqrt(f.vx * f.vx + f.vy * f.vy);
+        if (spd > 0.9) { f.vx = (f.vx / spd) * 0.9; f.vy = (f.vy / spd) * 0.9; }
+
+        // Mouse repulsion
+        const dx = f.x - mx;
+        const dy = f.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < REPEL_RADIUS && dist > 0) {
+          const force = (REPEL_RADIUS - dist) / REPEL_RADIUS;
+          f.vx += (dx / dist) * force * REPEL_FORCE * 0.08;
+          f.vy += (dy / dist) * force * REPEL_FORCE * 0.08;
+        }
+
+        f.x += f.vx;
+        f.y += f.vy;
+
+        // Wrap edges
+        if (f.x < -10) f.x = W + 10;
+        if (f.x > W + 10) f.x = -10;
+        if (f.y < -10) f.y = H + 10;
+        if (f.y > H + 10) f.y = -10;
+
+        // Pulse alpha
+        f.alpha += f.alphaDir * (0.008 + Math.random() * 0.005);
+        if (f.alpha > 1) { f.alpha = 1; f.alphaDir = -1; }
+        if (f.alpha < 0.05) { f.alpha = 0.05; f.alphaDir = 1; }
+
+        // Draw glow
+        const grd = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.glowSize);
+        grd.addColorStop(0, `hsla(${f.hue}, 90%, 75%, ${f.alpha})`);
+        grd.addColorStop(0.4, `hsla(${f.hue}, 80%, 60%, ${f.alpha * 0.5})`);
+        grd.addColorStop(1, `hsla(${f.hue}, 70%, 50%, 0)`);
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.glowSize, 0, Math.PI * 2);
+        ctx.fillStyle = grd;
+        ctx.fill();
+
+        // Core dot
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${f.hue}, 100%, 90%, ${f.alpha})`;
+        ctx.fill();
+      }
+
+      // ── Draw & update falling leaves ──
+      for (const l of leaves) {
+        // Wobble horizontal drift (simulates air)
+        l.wobble += l.wobbleSpeed;
+        const windX = Math.sin(l.wobble) * 0.5;
+
+        // Mouse repulsion for leaves
+        const dx = l.x - mx;
+        const dy = l.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < REPEL_RADIUS && dist > 0) {
+          const force = (REPEL_RADIUS - dist) / REPEL_RADIUS;
+          l.rx += (dx / dist) * force * REPEL_FORCE * 0.12;
+          l.ry += (dy / dist) * force * REPEL_FORCE * 0.12;
+          l.angularV += force * 0.04;
+        }
+
+        // Decay repulsion velocity
+        l.rx *= 0.92;
+        l.ry *= 0.92;
+
+        l.x += l.vx + windX + l.rx;
+        l.y += l.vy + l.ry;
+        l.angle += l.angularV;
+        l.angularV *= 0.99;
+
+        // Reset when off screen
+        if (l.y > H + 40 || l.x < -80 || l.x > W + 80) {
+          const reset = makeLeaf();
+          Object.assign(l, reset);
+          l.width = l.len * 0.42;
+        }
+
+        drawLeaf(ctx, l.x, l.y, l.len, l.width, l.angle, l.r, l.g, l.b, l.alpha);
+      }
+
+      animRef.current = requestAnimationFrame(frame);
+    }
+
+    animRef.current = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousemove", onMouseMove);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 0,
+      }}
+      aria-hidden="true"
+    />
+  );
+}
+
+/* ─── Forest Image + Mouse Parallax ──────────────────── */
+function ForestDecoration() {
+  const leftRef  = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const mouse    = useRef({ x: 0.5, y: 0.5 });
+  const current  = useRef({ x: 0.5, y: 0.5 });
+  const rafRef   = useRef<number>(0);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      mouse.current = {
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      };
+    };
+    window.addEventListener("mousemove", onMove);
+
+    const tick = () => {
+      // Smooth lerp toward actual mouse position
+      const LERP = 0.055;
+      current.current.x += (mouse.current.x - current.current.x) * LERP;
+      current.current.y += (mouse.current.y - current.current.y) * LERP;
+
+      // Parallax offset: ±18px horizontal, ±10px vertical
+      const dx = (current.current.x - 0.5) * 36;
+      const dy = (current.current.y - 0.5) * 20;
+
+      if (leftRef.current) {
+        // Left forest moves opposite to mouse (mouse right → forest nudges left = feels anchored)
+        leftRef.current.style.transform = `translateX(${-dx * 0.5}px) translateY(${dy * 0.4}px)`;
+      }
+      if (rightRef.current) {
+        rightRef.current.style.transform = `scaleX(-1) translateX(${-dx * 0.5}px) translateY(${dy * 0.4}px)`;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return (
+    <>
+      <ForestCanvas />
+      <div className={styles.forestDecor} aria-hidden="true">
+        {/* Left forest */}
+        <div ref={leftRef} className={styles.vineLeft}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/forest-side.png"
+            alt=""
+            className={styles.forestImg}
+            draggable={false}
+          />
+        </div>
+
+        {/* Right forest (mirrored via CSS scaleX(-1)) */}
+        <div ref={rightRef} className={styles.vineRight}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/forest-side.png"
+            alt=""
+            className={styles.forestImg}
+            draggable={false}
+          />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -85,19 +405,29 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<IdentifyResult | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
   const [lang, setLang] = useState<"en" | "th">("en");
   const [activeNav, setActiveNav] = useState<"home" | "history" | "saved" | "settings">("home");
+  const [toast, setToast] = useState<{message: string, type: "error"|"success"} | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  const selected: AnimalCandidate | null = result?.candidates?.[0] ?? null;
+  const selected: AnimalCandidate | null = result?.candidates?.[selectedIdx] ?? null;
 
   const processFile = (file: File | undefined) => {
     if (!file || !file.type.startsWith("image/")) return;
     setImage(file);
     setPreviewUrl(URL.createObjectURL(file));
     setResult(null);
+    setSelectedIdx(0);
   };
 
   const handleIdentify = async () => {
@@ -120,7 +450,21 @@ export default function HomePage() {
           setView("result"); // ← triggers the slide!
         } catch (e) {
           console.error(e);
-          alert("❌ Could not connect to AI. Please check your GEMINI_API_KEY.");
+          if (e instanceof Error && e.message === "429") {
+            setToast({ 
+              message: lang === "th" 
+                ? "ระบบประมวลผลถูกจำกัดชั่วคราว (Rate Limit) รอสัก 10 วินาทีแล้วลองใหม่ครับ"
+                : "Rate Limit Exceeded. Please wait 10 seconds and try again.", 
+              type: "error" 
+            });
+          } else {
+            setToast({ 
+              message: lang === "th"
+                ? "ไม่สามารถเชื่อมต่อ AI ได้ กรุณาตรวจสอบ GEMINI_API_KEY"
+                : "Could not connect to AI. Please check your GEMINI_API_KEY.", 
+              type: "error" 
+            });
+          }
         } finally {
           setIsLoading(false);
         }
@@ -158,6 +502,9 @@ export default function HomePage() {
 
   return (
     <div className={styles.container}>
+      {/* Forest decoration layer */}
+      <ForestDecoration />
+
       <div className={`${styles.appWindow} ${view === "result" ? styles.appWindowExpanded : ""}`}>
 
         {/* ── Desktop Sidebar ── */}
@@ -166,8 +513,8 @@ export default function HomePage() {
             <svg className={styles.sidebarCorners} viewBox="0 0 44 44" fill="none" aria-hidden="true">
               <defs>
                 <linearGradient id="cornerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00e5ff" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
+                  <stop offset="0%" stopColor="#4ade80" />
+                  <stop offset="100%" stopColor="#c8a84b" />
                 </linearGradient>
               </defs>
               <path d="M 16 2 L 14 2 A 12 12 0 0 0 2 14 L 2 16" stroke="url(#cornerGrad)" strokeWidth="2.5" strokeLinecap="round" />
@@ -237,16 +584,18 @@ export default function HomePage() {
             <div
               id="image-dropzone"
               className={`${styles.dropzone} ${isDragging ? styles.dropzoneActive : ""}`}
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragOver={(e) => { e.preventDefault(); if (!isLoading) setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => {
                 e.preventDefault();
+                if (isLoading) return;
                 setIsDragging(false);
                 e.dataTransfer.files?.[0] && processFile(e.dataTransfer.files[0]);
               }}
-              onClick={() => fileRef.current?.click()}
-              role="button" tabIndex={0} aria-label="Upload animal image"
-              onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
+              onClick={() => { if (!isLoading) fileRef.current?.click(); }}
+              role="button" tabIndex={isLoading ? -1 : 0} aria-label="Upload animal image"
+              onKeyDown={(e) => { if (!isLoading && e.key === "Enter") fileRef.current?.click(); }}
+              style={{ cursor: isLoading ? "default" : "pointer" }}
             >
               {previewUrl ? (
                 <div className={styles.previewWrapper}>
@@ -540,6 +889,14 @@ export default function HomePage() {
           </button>
         ))}
       </nav>
+
+      {/* ── Toast Notification ── */}
+      {toast && (
+        <div className={`${styles.toastNotification} ${toast.type === "error" ? styles.toastError : styles.toastSuccess}`}>
+          {toast.type === "error" ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
       If NO animal is present: {"is_animal": false, "candidates": []}
 
-      If an animal IS present, identify up to 3 most likely species candidates, ordered by confidence (highest first). The first candidate is your primary identification, and the others are secondary possibilities.
+      If an animal IS present, you MUST provide exactly 4 species candidates, ordered by confidence (highest first). The first candidate is your primary identification, and the remaining 3 are secondary alternatives (even if their confidence is lower).
       Respond ONLY with valid JSON — no markdown, no extra text:
       {
         "is_animal": true,
