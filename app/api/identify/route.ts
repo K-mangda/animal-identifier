@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided." }, { status: 400 });
     }
 
-    // Using a Pro model for higher accuracy in image recognition
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    // Using gemini-3.1-pro for maximum reasoning and accuracy
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro" });
 
     const prompt = `
       You are an expert zoologist, herpetologist, and wildlife biologist.
