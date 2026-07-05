@@ -39,18 +39,21 @@ function ForestCanvas() {
       alpha: number; alphaDir: number;
       hue: number; // 80-140 green range
       glowSize: number;
+      seedX: number; seedY: number;
     }
     const FIREFLY_COUNT = 55;
     const fireflies: Firefly[] = Array.from({ length: FIREFLY_COUNT }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.4,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
       r: Math.random() * 1.8 + 0.8,
       alpha: Math.random(),
       alphaDir: Math.random() > 0.5 ? 1 : -1,
       hue: 90 + Math.random() * 50,
       glowSize: Math.random() * 8 + 4,
+      seedX: Math.random() * 100,
+      seedY: Math.random() * 100,
     }));
 
     // ── Pre-render Blurred Leaves ──
@@ -104,10 +107,10 @@ function ForestCanvas() {
       return {
         x: Math.random() * W,
         y: -Math.random() * H * 0.5 - 30,
-        vx: (Math.random() - 0.5) * 0.7,
-        vy: Math.random() * 0.8 + 0.4,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: Math.random() * 0.6 + 0.3,
         angle: Math.random() * Math.PI * 2,
-        angularV: (Math.random() - 0.5) * 0.025,
+        angularV: (Math.random() - 0.5) * 0.015,
         len: Math.random() * 20 + 12,
         width: 0,
         colorIndex,
@@ -133,12 +136,14 @@ function ForestCanvas() {
 
       // ── Draw & update fireflies ──
       for (const f of fireflies) {
-        // Wander
-        f.vx += (Math.random() - 0.5) * 0.04;
-        f.vy += (Math.random() - 0.5) * 0.04;
+        // Smooth Wander
+        f.vx += Math.sin(t * 0.5 + f.seedX) * 0.008;
+        f.vy += Math.cos(t * 0.4 + f.seedY) * 0.008;
+        f.vx *= 0.98;
+        f.vy *= 0.98;
         // Clamp speed
         const spd = Math.sqrt(f.vx * f.vx + f.vy * f.vy);
-        if (spd > 0.9) { f.vx = (f.vx / spd) * 0.9; f.vy = (f.vy / spd) * 0.9; }
+        if (spd > 0.6) { f.vx = (f.vx / spd) * 0.6; f.vy = (f.vy / spd) * 0.6; }
 
         // Mouse repulsion
         const dx = f.x - mx;
@@ -160,7 +165,7 @@ function ForestCanvas() {
         if (f.y > H + 10) f.y = -10;
 
         // Pulse alpha
-        f.alpha += f.alphaDir * (0.008 + Math.random() * 0.005);
+        f.alpha += f.alphaDir * 0.005;
         if (f.alpha > 1) { f.alpha = 1; f.alphaDir = -1; }
         if (f.alpha < 0.05) { f.alpha = 0.05; f.alphaDir = 1; }
 
@@ -187,7 +192,7 @@ function ForestCanvas() {
       for (const l of leaves) {
         // Wobble horizontal drift (simulates air)
         l.wobble += l.wobbleSpeed;
-        const windX = Math.sin(l.wobble) * 0.5;
+        const windX = Math.sin(l.wobble) * (0.3 + l.len * 0.01);
 
         // Mouse repulsion for leaves
         const dx = l.x - mx;
@@ -200,15 +205,15 @@ function ForestCanvas() {
         }
 
         // Decay repulsion velocity
-        l.rx *= 0.92;
-        l.ry *= 0.92;
+        l.rx *= 0.95;
+        l.ry *= 0.95;
 
         l.x += l.vx + windX + l.rx;
         l.y += l.vy + l.ry;
-        l.angle += l.angularV;
+        l.angle += l.angularV + (windX * 0.01);
         
         // Apply stronger friction to rotation so it doesn't spin forever
-        l.angularV *= 0.94;
+        l.angularV *= 0.98;
 
         // Reset when off screen
         if (l.y > H + 40 || l.x < -80 || l.x > W + 80) {

@@ -493,8 +493,9 @@
   top: 2px;
   bottom: 2px;
   width: 36px;
-  background: rgba(74, 180, 60, 0.18);
+  background: #ffffff;
   border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .langToggle[data-active="en"]::before {
@@ -522,7 +523,7 @@
   color: var(--text-2);
 }
 .langActive {
-  color: var(--forest);
+  color: var(--forest-deep);
 }
 
 /* ─── Detail panel ───────────────────────────────────── */
