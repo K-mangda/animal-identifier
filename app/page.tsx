@@ -5,6 +5,7 @@ import {
   Home, Clock, Heart, Settings, Camera,
   MapPin, Utensils, Globe, Clock3,
   AlertTriangle, Info, CheckCircle2, ArrowUpRight, ArrowLeft,
+  Scale, Activity, Leaf, ShieldAlert
 } from "lucide-react";
 import styles from "./page.module.css";
 import { AnimalCandidate, IdentifyResult } from "../types/animal";
@@ -166,9 +167,6 @@ export default function HomePage() {
                 <div className={styles.logoIcon}><PawIcon size={17} /></div>
                 <span className={styles.logoText}>FAUNAFY</span>
               </div>
-              <button className={styles.headerExitBtn} aria-label="Share">
-                <ArrowUpRight size={15} />
-              </button>
             </div>
 
             {/* Title */}
@@ -349,6 +347,62 @@ export default function HomePage() {
                               ) : null
                             )}
                           </div>
+
+                          {(lang === "en" ? selected.physical_characteristics_en : selected.physical_characteristics_th) && (
+                            <div className={styles.encyclopediaSection}>
+                              <div className={styles.encyclopediaHeader}>
+                                <Scale size={18} className={styles.iconTint} />
+                                <h3 className={styles.encyclopediaTitle}>
+                                  {lang === "en" ? "Physical Characteristics" : "ลักษณะทางกายภาพ"}
+                                </h3>
+                              </div>
+                              <p className={styles.encyclopediaText}>
+                                {lang === "en" ? selected.physical_characteristics_en : selected.physical_characteristics_th}
+                              </p>
+                            </div>
+                          )}
+
+                          {(lang === "en" ? selected.behavior_en : selected.behavior_th) && (
+                            <div className={styles.encyclopediaSection}>
+                              <div className={styles.encyclopediaHeader}>
+                                <Activity size={18} className={styles.iconTint} />
+                                <h3 className={styles.encyclopediaTitle}>
+                                  {lang === "en" ? "Behavior & Lifestyle" : "พฤติกรรมและการใช้ชีวิต"}
+                                </h3>
+                              </div>
+                              <p className={styles.encyclopediaText}>
+                                {lang === "en" ? selected.behavior_en : selected.behavior_th}
+                              </p>
+                            </div>
+                          )}
+
+                          {(lang === "en" ? selected.ecological_role_en : selected.ecological_role_th) && (
+                            <div className={styles.encyclopediaSection}>
+                              <div className={styles.encyclopediaHeader}>
+                                <Leaf size={18} className={styles.iconTint} />
+                                <h3 className={styles.encyclopediaTitle}>
+                                  {lang === "en" ? "Ecological Role" : "บทบาทในระบบนิเวศ"}
+                                </h3>
+                              </div>
+                              <p className={styles.encyclopediaText}>
+                                {lang === "en" ? selected.ecological_role_en : selected.ecological_role_th}
+                              </p>
+                            </div>
+                          )}
+
+                          {(lang === "en" ? selected.conservation_details_en : selected.conservation_details_th) && (
+                            <div className={styles.encyclopediaSection}>
+                              <div className={styles.encyclopediaHeader}>
+                                <ShieldAlert size={18} className={styles.iconTint} />
+                                <h3 className={styles.encyclopediaTitle}>
+                                  {lang === "en" ? "Conservation Status Details" : "รายละเอียดสถานะการอนุรักษ์"}
+                                </h3>
+                              </div>
+                              <p className={styles.encyclopediaText}>
+                                {lang === "en" ? selected.conservation_details_en : selected.conservation_details_th}
+                              </p>
+                            </div>
+                          )}
 
                           {(lang === "en" ? selected.fun_fact_en : selected.fun_fact_th) && (
                             <div className={styles.funFactBar}>

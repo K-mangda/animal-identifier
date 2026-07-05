@@ -44,10 +44,18 @@ export async function POST(req: NextRequest) {
             "diet_th": "ประเภทอาหารและแหล่งอาหารหลัก",
             "confidence_percentage": 95,
             "conservation_status": "IUCN code only: LC, NT, VU, EN, CR, EW, or EX",
+            "conservation_details_en": "Why it has this status and primary threats",
+            "conservation_details_th": "สาเหตุและภัยคุกคามหลัก",
             "lifespan_en": "e.g. 10–15 years in the wild",
             "lifespan_th": "เช่น 10-15 ปีในป่า",
             "geographic_range_en": "Primary regions where this species lives",
             "geographic_range_th": "ภูมิภาคหลักที่พบสายพันธุ์นี้",
+            "physical_characteristics_en": "Detailed description of appearance, size, weight, and unique physical traits",
+            "physical_characteristics_th": "ลักษณะรูปร่าง ขนาด น้ำหนัก และจุดเด่นทางกายภาพ",
+            "behavior_en": "Social structure, hunting/foraging habits, and notable behaviors",
+            "behavior_th": "โครงสร้างทางสังคม พฤติกรรมการหากิน และพฤติกรรมที่โดดเด่น",
+            "ecological_role_en": "Importance of this species to its ecosystem",
+            "ecological_role_th": "ความสำคัญของสายพันธุ์นี้ต่อระบบนิเวศ",
             "fun_fact_en": "One fascinating, lesser-known fact about this species",
             "fun_fact_th": "เกร็ดความรู้ที่น่าสนใจเกี่ยวกับสายพันธุ์นี้"
           }

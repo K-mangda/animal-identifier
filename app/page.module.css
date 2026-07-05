@@ -678,6 +678,37 @@ body::before {
   line-height: 1.65;
 }
 
+/* Encyclopedia Sections */
+.encyclopediaSection {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+.encyclopediaHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.encyclopediaTitle {
+  font-family: var(--font-h);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+.encyclopediaText {
+  font-size: 0.88rem;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+.iconTint {
+  color: var(--cyan);
+}
+
 /* ─── Not animal ─────────────────────────────────────── */
 .notAnimalState {
   text-align: center;
@@ -800,7 +831,7 @@ body::before {
 
 @media (min-width: 900px) {
   .slidePanel { padding: 3rem 4.5rem 3rem; }
-  .detailGrid { grid-template-columns: repeat(4, 1fr); }
+  .detailGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ═══ ANIMATIONS ══════════════════════════════════════ */
