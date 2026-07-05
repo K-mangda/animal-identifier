@@ -119,7 +119,7 @@ export default function HomePage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.appWindow}>
+      <div className={`${styles.appWindow} ${view === "result" ? styles.appWindowExpanded : ""}`}>
 
         {/* ── Desktop Sidebar ── */}
         <aside className={styles.sidebar}>
