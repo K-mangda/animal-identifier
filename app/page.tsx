@@ -288,7 +288,9 @@ export default function HomePage() {
               <section className={styles.resultsArea} aria-label="Identification result">
                 <div className={styles.resultsPanel}>
                   <div className={styles.resultsHeader}>
-                    <h2 className={styles.resultsTitle}>Species Details</h2>
+                    <h2 className={styles.resultsTitle}>
+                      {lang === "en" ? "Species Details" : "รายละเอียดสายพันธุ์"}
+                    </h2>
                     <div className={styles.headerActions}>
                       <div className={styles.langToggle}>
                         <button className={`${styles.langBtn} ${lang === "en" ? styles.langActive : ""}`} onClick={() => setLang("en")}>EN</button>
@@ -361,12 +363,16 @@ export default function HomePage() {
                   ) : (
                     <div className={styles.notAnimalState}>
                       <Info size={34} color="rgba(255,255,255,0.18)" />
-                      <h3 className={styles.notAnimalTitle}>No animal detected</h3>
+                      <h3 className={styles.notAnimalTitle}>
+                        {lang === "en" ? "No animal detected" : "ไม่พบสัตว์ในรูปภาพ"}
+                      </h3>
                       <p className={styles.notAnimalText}>
-                        Try uploading a clearer photo of an animal.
+                        {lang === "en" 
+                          ? "Try uploading a clearer photo of an animal." 
+                          : "ลองอัปโหลดรูปภาพสัตว์ที่ชัดเจนกว่านี้อีกครั้ง"}
                       </p>
                       <button id="try-again-btn" className={styles.btnTryAgain} onClick={handleReset}>
-                        Try Another Image
+                        {lang === "en" ? "Try Another Image" : "ลองใช้รูปภาพอื่น"}
                       </button>
                     </div>
                   )}
