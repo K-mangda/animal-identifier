@@ -167,13 +167,22 @@ export default function HomePage() {
                 <div className={styles.logoIcon}><PawIcon size={17} /></div>
                 <span className={styles.logoText}>FAUNAFY</span>
               </div>
+              
+              <div className={styles.langToggle}>
+                <button className={`${styles.langBtn} ${lang === "en" ? styles.langActive : ""}`} onClick={() => setLang("en")}>EN</button>
+                <button className={`${styles.langBtn} ${lang === "th" ? styles.langActive : ""}`} onClick={() => setLang("th")}>TH</button>
+              </div>
             </div>
 
             {/* Title */}
             <div className={styles.header}>
-              <h1 className={styles.title}>What is this animal?</h1>
+              <h1 className={styles.title}>
+                {lang === "en" ? "What is this animal?" : "สัตว์ตัวนี้คืออะไร?"}
+              </h1>
               <p className={styles.subtitle}>
-                Simply upload or capture an image to identify the species.
+                {lang === "en" 
+                  ? "Simply upload or capture an image to identify the species." 
+                  : "เพียงอัปโหลดหรือถ่ายรูป เพื่อให้ AI ช่วยระบุสายพันธุ์ให้คุณ"}
               </p>
             </div>
 
@@ -224,8 +233,12 @@ export default function HomePage() {
                   </div>
                   {isLoading && (
                     <div className={styles.scanTextGroup}>
-                      <p className={styles.scanTitle}>Scanning Species</p>
-                      <p className={styles.scanDots}>AI is analyzing the image…</p>
+                      <p className={styles.scanTitle}>
+                        {lang === "en" ? "Scanning Species" : "กำลังวิเคราะห์สายพันธุ์"}
+                      </p>
+                      <p className={styles.scanDots}>
+                        {lang === "en" ? "AI is analyzing the image…" : "AI กำลังประมวลผลรูปภาพของคุณ..."}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -235,8 +248,12 @@ export default function HomePage() {
                     <div className={styles.dropzonePaw}><PawIcon size={44} /></div>
                     <Camera size={16} className={styles.dropzoneCamera} />
                   </div>
-                  <h2 className={styles.dropzoneTitle}>Drop an image or click to upload</h2>
-                  <p className={styles.dropzoneText}>Supported: JPG, PNG, WEBP · Max 10 MB</p>
+                  <h2 className={styles.dropzoneTitle}>
+                    {lang === "en" ? "Drop an image or click to upload" : "ลากรูปมาวาง หรือคลิกเพื่ออัปโหลด"}
+                  </h2>
+                  <p className={styles.dropzoneText}>
+                    {lang === "en" ? "Supported: JPG, PNG, WEBP · Max 10 MB" : "รองรับ: JPG, PNG, WEBP · ขนาดสูงสุด 10 MB"}
+                  </p>
                 </div>
               )}
             </div>
@@ -244,10 +261,10 @@ export default function HomePage() {
             {/* Camera / OR row */}
             <div className={styles.cameraRow}>
               <div className={styles.orDivider} />
-              <span className={styles.orText}>or</span>
+              <span className={styles.orText}>{lang === "en" ? "or" : "หรือ"}</span>
               <button id="camera-capture-btn" className={styles.btnCamera}
                 onClick={() => cameraRef.current?.click()} aria-label="Use camera">
-                <Camera size={14} /> Use Camera
+                <Camera size={14} /> {lang === "en" ? "Use Camera" : "ถ่ายรูป"}
               </button>
               <div className={styles.orDivider} />
             </div>
@@ -256,7 +273,9 @@ export default function HomePage() {
             <div className={styles.btnRow}>
               <button id="identify-animal-btn" className="btn-primary"
                 onClick={handleIdentify} disabled={!image || isLoading}>
-                {isLoading ? "Analyzing..." : "Identify Animal"}
+                {isLoading 
+                  ? (lang === "en" ? "Analyzing..." : "กำลังวิเคราะห์...") 
+                  : (lang === "en" ? "Identify Animal" : "ตรวจสอบสัตว์")}
               </button>
             </div>
 
