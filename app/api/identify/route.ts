@@ -20,11 +20,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided." }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    // Using a Pro model for higher accuracy in image recognition
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const prompt = `
-      You are an expert zoologist and wildlife biologist.
-      Analyze the image carefully.
+      You are an expert zoologist, herpetologist, and wildlife biologist.
+      Analyze the image extremely carefully. Pay close attention to minute details such as:
+      - Scale patterns, textures, and coloration.
+      - Snout shape (e.g., presence of nasal appendages or horns).
+      - Eye pupil shape and size.
+      - Body proportions and anatomical anomalies.
+
+      If the animal is easily confused with another species (e.g., Rhinoceros ratsnake vs. Golden tree snake), double-check these distinguishing features before making your final classification.
 
       If NO animal is present: {"is_animal": false, "candidates": []}
 
