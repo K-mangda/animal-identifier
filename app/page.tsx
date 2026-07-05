@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Home, Clock, Heart, Settings, Camera,
   MapPin, Utensils, Globe, Clock3,
   AlertTriangle, Info, CheckCircle2, ArrowUpRight, ArrowLeft,
-  Scale, Activity, Leaf, ShieldAlert
+  Scale, Activity, Leaf, ShieldAlert, Search
 } from "lucide-react";
 import styles from "./page.module.css";
 import { AnimalCandidate, IdentifyResult } from "../types/animal";
@@ -35,6 +35,45 @@ function PawIcon({ size = 20 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
       <path d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z" />
     </svg>
+  );
+}
+
+/* ─── Species Thumbnail ──────────────────────────────────── */
+function SpeciesThumbnail({ candidate, lang, onClick }: { candidate: AnimalCandidate, lang: "en"|"th", onClick: () => void }) {
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchWiki = async () => {
+      try {
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(candidate.scientific_name)}&prop=pageimages&format=json&pithumbsize=200&origin=*`);
+        const data = await res.json();
+        const pages = data.query?.pages;
+        if (pages) {
+          const firstPage = Object.values(pages)[0] as any;
+          if (firstPage?.thumbnail?.source) {
+            setImgUrl(firstPage.thumbnail.source);
+          }
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchWiki();
+  }, [candidate.scientific_name]);
+
+  return (
+    <div className={styles.candidateCard} onClick={onClick}>
+      {imgUrl ? (
+        <img src={imgUrl} alt={candidate.scientific_name} className={styles.candidateImg} />
+      ) : (
+        <div className={styles.candidateImgPlaceholder}><Search size={20} opacity={0.5} /></div>
+      )}
+      <div className={styles.candidateInfo}>
+        <div className={styles.candidateHeader}>
+          <span className={styles.candidateName}>{lang === "en" ? candidate.common_name_en : candidate.common_name_th}</span>
+          <span className={styles.candidateScore}>{candidate.confidence_percentage}%</span>
+        </div>
+        <div className={styles.candidateScientific}>{candidate.scientific_name}</div>
+      </div>
+    </div>
   );
 }
 
@@ -428,6 +467,33 @@ export default function HomePage() {
                               <div>
                                 <p className={styles.funFactLabel}>{lang === "en" ? "Did you know?" : "รู้หรือไม่?"}</p>
                                 <p className={styles.funFactText}>{lang === "en" ? selected.fun_fact_en : selected.fun_fact_th}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {result.candidates.length > 1 && (
+                            <div className={styles.similarSpeciesSection}>
+                              <div className={styles.similarSpeciesHeader}>
+                                <h3 className={styles.similarSpeciesTitle}>
+                                  {lang === "en" ? "Other Possibilities" : "สายพันธุ์อื่นที่ใกล้เคียง"}
+                                </h3>
+                              </div>
+                              <div className={styles.similarSpeciesList}>
+                                {result.candidates.map((candidate, idx) => {
+                                  if (idx === selectedIdx) return null;
+                                  return (
+                                    <SpeciesThumbnail 
+                                      key={idx} 
+                                      candidate={candidate} 
+                                      lang={lang} 
+                                      onClick={() => {
+                                        setSelectedIdx(idx);
+                                        // Scroll to top of results
+                                        document.querySelector(`.${styles.resultsPanel}`)?.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }} 
+                                    />
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

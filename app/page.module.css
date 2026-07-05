@@ -913,3 +913,76 @@ body::before {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-5px); }
 }
+
+/* ═══ SIMILAR SPECIES CANDIDATES ══════════════════════════════════════ */
+.similarSpeciesSection {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.similarSpeciesHeader {
+  margin-bottom: 1rem;
+}
+.similarSpeciesTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.similarSpeciesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.candidateCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.candidateCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.candidateImg, .candidateImgPlaceholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.candidateInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.candidateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.candidateName {
+  font-weight: 500;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.candidateScore {
+  font-weight: 600;
+  color: var(--cyan);
+  font-size: 0.85rem;
+}
+.candidateScientific {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  font-style: italic;
+  margin-top: 0.2rem;
+}

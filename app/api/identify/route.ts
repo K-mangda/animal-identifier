@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided." }, { status: 400 });
     }
 
-    // Using gemini-3.1-pro for maximum reasoning and accuracy
-    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
+    // Using gemini-3.5-flash to avoid Free Tier Quota limits on Pro models
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     const prompt = `
       You are an expert zoologist, herpetologist, and wildlife biologist.
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
       If NO animal is present: {"is_animal": false, "candidates": []}
 
-      If an animal IS present, identify the single most likely species.
+      If an animal IS present, identify up to 3 most likely species candidates, ordered by confidence (highest first). The first candidate is your primary identification, and the others are secondary possibilities.
       Respond ONLY with valid JSON — no markdown, no extra text:
       {
         "is_animal": true,
