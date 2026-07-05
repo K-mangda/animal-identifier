@@ -3,14 +3,18 @@ export interface AnimalCandidate {
   common_name_th: string;
   scientific_name: string;
   animal_class: string;
-  habitat: string;
-  diet: string;
+  habitat_en: string;
+  habitat_th: string;
+  diet_en: string;
+  diet_th: string;
   confidence_percentage: number;
   conservation_status: string; // IUCN: LC, NT, VU, EN, CR, EW, EX
-  lifespan: string;
-  size_info: string;
-  geographic_range: string;
-  fun_fact: string;
+  lifespan_en: string;
+  lifespan_th: string;
+  geographic_range_en: string;
+  geographic_range_th: string;
+  fun_fact_en: string;
+  fun_fact_th: string;
 }
 
 export interface IdentifyResult {

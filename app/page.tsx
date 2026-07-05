@@ -45,20 +45,19 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<IdentifyResult | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [lang, setLang] = useState<"en" | "th">("en");
   const [activeNav, setActiveNav] = useState<"home" | "history" | "saved" | "settings">("home");
 
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  const selected: AnimalCandidate | null = result?.candidates?.[selectedIdx] ?? null;
+  const selected: AnimalCandidate | null = result?.candidates?.[0] ?? null;
 
   const processFile = (file: File | undefined) => {
     if (!file || !file.type.startsWith("image/")) return;
     setImage(file);
     setPreviewUrl(URL.createObjectURL(file));
     setResult(null);
-    setSelectedIdx(0);
   };
 
   const handleIdentify = async () => {
@@ -78,7 +77,6 @@ export default function HomePage() {
           if (!res.ok) throw new Error(`${res.status}`);
           const data: IdentifyResult = await res.json();
           setResult(data);
-          setSelectedIdx(0);
           setView("result"); // ← triggers the slide!
         } catch (e) {
           console.error(e);
@@ -111,10 +109,10 @@ export default function HomePage() {
 
   const detailItems = selected
     ? [
-        { icon: <MapPin size={14} />,   label: "Habitat",  value: selected.habitat },
-        { icon: <Utensils size={14} />, label: "Diet",     value: selected.diet },
-        { icon: <Clock3 size={14} />,   label: "Lifespan", value: selected.lifespan },
-        { icon: <Globe size={14} />,    label: "Range",    value: selected.geographic_range },
+        { icon: <MapPin size={14} />,   label: lang === "en" ? "Habitat" : "ถิ่นที่อยู่",  value: lang === "en" ? selected.habitat_en : selected.habitat_th },
+        { icon: <Utensils size={14} />, label: lang === "en" ? "Diet" : "อาหาร",     value: lang === "en" ? selected.diet_en : selected.diet_th },
+        { icon: <Clock3 size={14} />,   label: lang === "en" ? "Lifespan" : "อายุขัย", value: lang === "en" ? selected.lifespan_en : selected.lifespan_th },
+        { icon: <Globe size={14} />,    label: lang === "en" ? "Range" : "พื้นที่อาศัย",    value: lang === "en" ? selected.geographic_range_en : selected.geographic_range_th },
       ]
     : [];
 
@@ -293,53 +291,29 @@ export default function HomePage() {
 
                   <div className={styles.resultsHeader}>
                     <h2 className={styles.resultsTitle}>Species Details</h2>
-                    <button className={styles.collapseBtn} aria-label="Collapse">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="18 15 12 9 6 15" />
-                      </svg>
-                    </button>
+                    <div className={styles.headerActions}>
+                      <div className={styles.langToggle}>
+                        <button className={`${styles.langBtn} ${lang === "en" ? styles.langActive : ""}`} onClick={() => setLang("en")}>EN</button>
+                        <button className={`${styles.langBtn} ${lang === "th" ? styles.langActive : ""}`} onClick={() => setLang("th")}>TH</button>
+                      </div>
+                      <button className={styles.collapseBtn} aria-label="Collapse">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
-                  {result.is_animal && (result.candidates?.length ?? 0) > 0 ? (
+                  {result.is_animal && selected ? (
                     <>
-                      {/* Cards row */}
-                      <div className={styles.cardsRow}>
-                        {result.candidates.map((c, i) => (
-                          <div
-                            key={i}
-                            role="button" tabIndex={0}
-                            className={`${styles.speciesCard} ${selectedIdx === i ? styles.cardActive : ""}`}
-                            onClick={() => setSelectedIdx(i)}
-                            onKeyDown={(e) => e.key === "Enter" && setSelectedIdx(i)}
-                            aria-label={`Select ${c.common_name_en}`}
-                            aria-pressed={selectedIdx === i}
-                          >
-                            <div className={styles.cardImagePlaceholder}>
-                              {i === 0 && previewUrl ? (
-                                <img src={previewUrl} alt={c.common_name_en} className={styles.cardImage} />
-                              ) : (
-                                <div className={styles.cardImageFallback}>
-                                  {c.common_name_en?.[0] ?? "?"}
-                                </div>
-                              )}
-                            </div>
-                            <div className={styles.cardContent}>
-                              <h3 className={styles.cardTitle}>{i + 1}. {c.common_name_en}</h3>
-                              <p className={styles.cardMatch}>{c.confidence_percentage}% Match</p>
-                              <div className={styles.cardFooter}>
-                                <span className={styles.viewInfoText}>View Info</span>
-                                <button className={styles.arrowBtn} tabIndex={-1} aria-hidden="true">→</button>
-                              </div>
-                            </div>
+                      <div className={styles.detailPanel}>
+                        {previewUrl && (
+                          <div className={styles.detailImageWrapper}>
+                            <img src={previewUrl} alt={selected.common_name_en} className={styles.detailImage} />
                           </div>
-                        ))}
-                      </div>
-
-                      {/* Detail expands on card click */}
-                      {selected && (
-                        <div className={styles.detailPanel}>
-                          <div className={styles.detailNameBlock}>
+                        )}
+                        <div className={styles.detailNameBlock}>
                             <h2 className={`${styles.detailNameEn} text-gradient`}>
                               {selected.common_name_en}
                             </h2>
@@ -376,17 +350,16 @@ export default function HomePage() {
                             )}
                           </div>
 
-                          {selected.fun_fact && (
+                          {(lang === "en" ? selected.fun_fact_en : selected.fun_fact_th) && (
                             <div className={styles.funFactBar}>
                               <div>
-                                <p className={styles.funFactLabel}>Did you know?</p>
-                                <p className={styles.funFactText}>{selected.fun_fact}</p>
+                                <p className={styles.funFactLabel}>{lang === "en" ? "Did you know?" : "รู้หรือไม่?"}</p>
+                                <p className={styles.funFactText}>{lang === "en" ? selected.fun_fact_en : selected.fun_fact_th}</p>
                               </div>
                             </div>
                           )}
                         </div>
-                      )}
-                    </>
+                      </>
                   ) : (
                     <div className={styles.notAnimalState}>
                       <Info size={34} color="rgba(255,255,255,0.18)" />

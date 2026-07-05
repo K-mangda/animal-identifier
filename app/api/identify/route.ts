@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
       If NO animal is present: {"is_animal": false, "candidates": []}
 
-      If an animal IS present, identify the TOP 3 most likely species (most confident first).
+      If an animal IS present, identify the single most likely species.
       Respond ONLY with valid JSON — no markdown, no extra text:
       {
         "is_animal": true,
@@ -38,17 +38,19 @@ export async function POST(req: NextRequest) {
             "common_name_th": "ชื่อสามัญภาษาไทย",
             "scientific_name": "Genus species",
             "animal_class": "e.g. Mammalia, Aves, Reptilia",
-            "habitat": "Primary natural habitat",
-            "diet": "Diet type and main food sources",
+            "habitat_en": "Primary natural habitat",
+            "habitat_th": "แหล่งที่อยู่อาศัยตามธรรมชาติ",
+            "diet_en": "Diet type and main food sources",
+            "diet_th": "ประเภทอาหารและแหล่งอาหารหลัก",
             "confidence_percentage": 95,
             "conservation_status": "IUCN code only: LC, NT, VU, EN, CR, EW, or EX",
-            "lifespan": "e.g. 10–15 years in the wild",
-            "size_info": "e.g. Length: 1.4–2.8 m, Weight: 100–300 kg",
-            "geographic_range": "Primary regions where this species lives",
-            "fun_fact": "One fascinating, lesser-known fact about this species"
-          },
-          { ...second candidate... },
-          { ...third candidate... }
+            "lifespan_en": "e.g. 10–15 years in the wild",
+            "lifespan_th": "เช่น 10-15 ปีในป่า",
+            "geographic_range_en": "Primary regions where this species lives",
+            "geographic_range_th": "ภูมิภาคหลักที่พบสายพันธุ์นี้",
+            "fun_fact_en": "One fascinating, lesser-known fact about this species",
+            "fun_fact_th": "เกร็ดความรู้ที่น่าสนใจเกี่ยวกับสายพันธุ์นี้"
+          }
         ]
       }
     `;

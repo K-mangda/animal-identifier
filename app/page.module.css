@@ -504,129 +504,57 @@ body::before {
 }
 .collapseBtn:hover { color: var(--text); }
 
-/* ─── Cards row ──────────────────────────────────────── */
-.cardsRow {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.cardsRow::-webkit-scrollbar { display: none; }
-
-.speciesCard {
-  min-width: 200px;
-  max-width: 200px;
-  flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid transparent;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  padding: 0.4rem;
-  background-image: linear-gradient(rgba(30, 35, 45, 0.9), rgba(30, 35, 45, 0.9)), linear-gradient(135deg, rgba(0, 229, 255, 0.6), rgba(139, 92, 246, 0.4));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-.speciesCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 229, 255, 0.2);
-}
-.cardActive {
-  background-image: linear-gradient(rgba(30, 35, 45, 0.9), rgba(30, 35, 45, 0.9)), linear-gradient(135deg, #00e5ff, #8b5cf6) !important;
-  box-shadow: 
-    0 0 20px rgba(0, 229, 255, 0.25),
-    inset 0 0 15px rgba(0, 229, 255, 0.05) !important;
-}
-
-.cardImagePlaceholder {
-  width: 100%;
-  height: 110px;
-  overflow: hidden;
-  border-radius: 12px;
-}
-.cardImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-.speciesCard:hover .cardImage { transform: scale(1.05); }
-
-.cardImageFallback {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(0, 40, 70, 0.8), rgba(30, 0, 80, 0.7));
+.headerActions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-h);
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.12);
-  letter-spacing: -1px;
+  gap: 1rem;
 }
-
-.cardContent {
-  padding: 0.6rem 0.5rem 0.4rem;
+.langToggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 2px;
 }
-.cardTitle {
-  font-family: var(--font-h);
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cardMatch {
+.langBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-3);
   font-size: 0.7rem;
-  color: var(--text-2);
-  margin-bottom: 0.6rem;
-}
-.cardFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.viewInfoText {
-  color: var(--cyan);
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-.arrowBtn {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-2);
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.75rem;
   transition: all 0.2s;
-  line-height: 1;
+  font-family: var(--font-h);
 }
-.arrowBtn:hover {
-  background: var(--cyan-dim);
-  border-color: rgba(0, 210, 255, 0.3);
+.langBtn:hover {
+  color: var(--text-2);
+}
+.langActive {
+  background: rgba(0, 229, 255, 0.15);
   color: var(--cyan);
 }
 
 /* ─── Detail panel ───────────────────────────────────── */
 .detailPanel {
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
   animation: fadeIn 0.3s ease;
+}
+
+.detailImageWrapper {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.detailImage {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
 }
 
 .detailNameBlock { display: flex; flex-direction: column; }
