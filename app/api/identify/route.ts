@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided." }, { status: 400 });
     }
 
-    // Using gemini-3.1-pro as requested by user
-    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro" });
+    // Using gemini-1.5-pro since gemini-3.1-pro does not exist in the API
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const prompt = `
       You are an expert zoologist, herpetologist, and wildlife biologist.
