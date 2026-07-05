@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { HistoryRecord, getAllHistoryRecords } from "@/lib/history";
 import styles from "@/app/page.module.css";
-import { Clock, Heart, Search } from "lucide-react";
+import { Clock, Heart, Inbox } from "lucide-react";
 
 interface HistoryPanelProps {
   lang: "en" | "th";
@@ -59,7 +59,7 @@ export default function HistoryPanel({ lang, showSavedOnly, onSelectRecord }: Hi
           </div>
         ) : records.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.4)" }}>
-            <Search size={48} style={{ margin: "0 auto 16px", opacity: 0.5 }} />
+            <Inbox size={48} strokeWidth={1.5} style={{ margin: "0 auto 16px", opacity: 0.5 }} />
             <p>{lang === "en" ? "No records found." : "ไม่พบประวัติ"}</p>
           </div>
         ) : (

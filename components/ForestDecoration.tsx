@@ -53,46 +53,7 @@ function ForestCanvas() {
       glowSize: Math.random() * 8 + 4,
     }));
 
-    // ── Leaf shape helper ──
-    function drawLeaf(
-      ctx: CanvasRenderingContext2D,
-      cx: number, cy: number,
-      len: number, width: number,
-      angle: number,
-      r: number, g: number, b: number, alpha: number
-    ) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-
-      // Simple leaf shape (reduced detail)
-      ctx.beginPath();
-      ctx.moveTo(0, -len / 2);
-      ctx.quadraticCurveTo(width, 0, 0, len / 2);
-      ctx.quadraticCurveTo(-width, 0, 0, -len / 2);
-      ctx.closePath();
-
-      // Solid color fill (no gradient)
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      ctx.fill();
-
-      ctx.restore();
-    }
-
-    // ── Falling Leaves ──
-    interface FallingLeaf {
-      x: number; y: number;
-      vx: number; vy: number;
-      angle: number; angularV: number;
-      len: number; width: number;
-      r: number; g: number; b: number;
-      alpha: number;
-      wobble: number; wobbleSpeed: number;
-      // repulsion
-      rx: number; ry: number;
-    }
-
-    const LEAF_COUNT = 22;
+    // ── Pre-render Blurred Leaves ──
     const leafColors = [
       [55, 140, 38],   // mid green
       [40, 120, 28],   // dark green
@@ -101,8 +62,45 @@ function ForestCanvas() {
       [140, 110, 30],  // golden-brown (autumn)
       [60, 130, 40],   // forest green
     ];
+    
+    const preRenderedLeaves: HTMLCanvasElement[] = [];
+    leafColors.forEach(([r, g, b]) => {
+      const off = document.createElement("canvas");
+      off.width = 64;
+      off.height = 64;
+      const octx = off.getContext("2d");
+      if (octx) {
+        octx.translate(32, 32);
+        octx.filter = "blur(2px)";
+        const len = 40;
+        const width = len * 0.42;
+        octx.beginPath();
+        octx.moveTo(0, -len / 2);
+        octx.quadraticCurveTo(width, 0, 0, len / 2);
+        octx.quadraticCurveTo(-width, 0, 0, -len / 2);
+        octx.closePath();
+        octx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        octx.fill();
+      }
+      preRenderedLeaves.push(off);
+    });
+
+    // ── Falling Leaves ──
+    interface FallingLeaf {
+      x: number; y: number;
+      vx: number; vy: number;
+      angle: number; angularV: number;
+      len: number; width: number;
+      colorIndex: number;
+      alpha: number;
+      wobble: number; wobbleSpeed: number;
+      // repulsion
+      rx: number; ry: number;
+    }
+
+    const LEAF_COUNT = 22;
     const makeLeaf = (): FallingLeaf => {
-      const [r, g, b] = leafColors[Math.floor(Math.random() * leafColors.length)];
+      const colorIndex = Math.floor(Math.random() * leafColors.length);
       return {
         x: Math.random() * W,
         y: -Math.random() * H * 0.5 - 30,
@@ -112,7 +110,7 @@ function ForestCanvas() {
         angularV: (Math.random() - 0.5) * 0.025,
         len: Math.random() * 20 + 12,
         width: 0,
-        r, g, b,
+        colorIndex,
         alpha: Math.random() * 0.4 + 0.3,
         wobble: Math.random() * Math.PI * 2,
         wobbleSpeed: Math.random() * 0.02 + 0.008,
@@ -185,7 +183,6 @@ function ForestCanvas() {
 
       // ── Draw & update falling leaves ──
       ctx.save();
-      ctx.filter = "blur(1.5px)"; // Make leaves slightly out of focus
       
       for (const l of leaves) {
         // Wobble horizontal drift (simulates air)
@@ -200,7 +197,6 @@ function ForestCanvas() {
           const force = (REPEL_RADIUS - dist) / REPEL_RADIUS;
           l.rx += (dx / dist) * force * REPEL_FORCE * 0.12;
           l.ry += (dy / dist) * force * REPEL_FORCE * 0.12;
-          l.angularV += force * 0.04;
         }
 
         // Decay repulsion velocity
@@ -210,7 +206,9 @@ function ForestCanvas() {
         l.x += l.vx + windX + l.rx;
         l.y += l.vy + l.ry;
         l.angle += l.angularV;
-        l.angularV *= 0.99;
+        
+        // Apply stronger friction to rotation so it doesn't spin forever
+        l.angularV *= 0.94;
 
         // Reset when off screen
         if (l.y > H + 40 || l.x < -80 || l.x > W + 80) {
@@ -219,8 +217,15 @@ function ForestCanvas() {
           l.width = l.len * 0.42;
         }
 
-        // Apply a slightly reduced alpha multiplier to make them less sharp
-        drawLeaf(ctx, l.x, l.y, l.len, l.width, l.angle, l.r, l.g, l.b, l.alpha * 0.6);
+        // Draw pre-rendered blurred leaf
+        ctx.save();
+        ctx.translate(l.x, l.y);
+        ctx.rotate(l.angle);
+        ctx.globalAlpha = l.alpha * 0.6;
+        const scale = l.len / 40; // since pre-rendered leaf is len=40
+        const size = 64 * scale;
+        ctx.drawImage(preRenderedLeaves[l.colorIndex], -size / 2, -size / 2, size, size);
+        ctx.restore();
       }
       ctx.restore();
 
