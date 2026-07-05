@@ -887,7 +887,12 @@ body::before {
   }
 
   .detailGrid { grid-template-columns: repeat(2, 1fr); }
-  .backBtn { display: none; }
+  
+  /* Hide the top header row (Back btn & Logo) in result panel on desktop to avoid duplicates */
+  .resultPanel .headerRow { display: none; }
+  
+  /* Hide the lang toggle in upload panel ONLY when in split view to avoid duplicate toggles */
+  .uploadPanel.panelSlideLeft .langToggle { display: none; }
 }
 
 /* ═══ ANIMATIONS ══════════════════════════════════════ */
