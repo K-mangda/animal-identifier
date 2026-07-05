@@ -287,8 +287,6 @@ export default function HomePage() {
             {result && (
               <section className={styles.resultsArea} aria-label="Identification result">
                 <div className={styles.resultsPanel}>
-                  <div className={styles.panelHandle} />
-
                   <div className={styles.resultsHeader}>
                     <h2 className={styles.resultsTitle}>Species Details</h2>
                     <div className={styles.headerActions}>
