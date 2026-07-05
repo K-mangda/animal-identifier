@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Utensils, Globe, Clock3, Scale, Activity, Leaf, ShieldAlert, Info, Heart, Volume2, VolumeX } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
+import { ArrowLeft, MapPin, Utensils, Globe, Clock3, Scale, Activity, Leaf, ShieldAlert, Info, Heart, Play, Pause, SkipForward, SkipBack, X, Headphones } from "lucide-react";
 import styles from "@/app/page.module.css";
 import PawIcon from "@/components/icons/PawIcon";
 import ConservationBadge from "@/components/ConservationBadge";
@@ -37,33 +38,121 @@ export default function ResultPanel({
 }: ResultPanelProps) {
   const selected: AnimalCandidate | null = result?.candidates?.[selectedIdx] ?? null;
 
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const tracks = useMemo(() => {
+    if (!selected) return [];
+    const arr = [
+      { id: "name", title: lang === "en" ? "Name & Overview" : "ชื่อและข้อมูลทั่วไป", text: lang === "en" ? `${selected.common_name_en}. ${selected.scientific_name}` : `${selected.common_name_th}. ${selected.scientific_name}` },
+      { id: "physical", title: lang === "en" ? "Physical Characteristics" : "ลักษณะทางกายภาพ", text: lang === "en" ? selected.physical_characteristics_en : selected.physical_characteristics_th },
+      { id: "behavior", title: lang === "en" ? "Behavior & Lifestyle" : "พฤติกรรมและการใช้ชีวิต", text: lang === "en" ? selected.behavior_en : selected.behavior_th },
+      { id: "ecology", title: lang === "en" ? "Ecological Role" : "บทบาทในระบบนิเวศ", text: lang === "en" ? selected.ecological_role_en : selected.ecological_role_th },
+      { id: "conservation", title: lang === "en" ? "Conservation Status Details" : "รายละเอียดสถานะการอนุรักษ์", text: lang === "en" ? selected.conservation_details_en : selected.conservation_details_th },
+      { id: "funfact", title: lang === "en" ? "Did you know?" : "รู้หรือไม่?", text: lang === "en" ? selected.fun_fact_en : selected.fun_fact_th },
+    ];
+    return arr.filter(t => t.text);
+  }, [selected, lang]);
+
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [currentTrackIdx, setCurrentTrackIdx] = useState(0);
+  
+  const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     return () => {
+      if (currentUtteranceRef.current) currentUtteranceRef.current.onend = null;
       window.speechSynthesis.cancel();
     };
   }, []);
 
-  const handleSpeak = () => {
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+  const playTrack = (index: number) => {
+    // Clear previous utterance's onend to prevent skip-chaining
+    if (currentUtteranceRef.current) {
+      currentUtteranceRef.current.onend = null;
+      currentUtteranceRef.current.onerror = null;
+    }
+    
+    window.speechSynthesis.cancel();
+    setIsPaused(false);
+    
+    if (index < 0 || index >= tracks.length) {
+      setIsPlaying(false);
       return;
     }
-    if (!selected) return;
     
-    const textToSpeak = lang === "en" 
-      ? `${selected.common_name_en}. ${selected.physical_characteristics_en}`
-      : `${selected.common_name_th}. ${selected.physical_characteristics_th}`;
+    // Crucial workaround for Chrome bug: 
+    // Calling speak() immediately after cancel() can make the audio un-pausable.
+    setTimeout(() => {
+      const track = tracks[index];
+      const utterance = new SpeechSynthesisUtterance(track.text);
+      utterance.lang = lang === "en" ? "en-US" : "th-TH";
+      
+      utterance.onend = () => {
+        // Handle auto-play next track
+        setTimeout(() => {
+          if (index + 1 < tracks.length) {
+            setCurrentTrackIdx(index + 1);
+            playTrack(index + 1);
+          } else {
+            setIsPlaying(false);
+          }
+        }, 500); // slight pause between sections
+      };
+      
+      utterance.onerror = (e) => {
+        // Ignore cancel errors
+        if (e.error !== "canceled") setIsPlaying(false);
+      };
+      
+      currentUtteranceRef.current = utterance;
+      setCurrentTrackIdx(index);
+      setIsPlaying(true);
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  };
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = lang === "en" ? "en-US" : "th-TH";
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      // Use instant cancel instead of pause for immediate stopping
+      if (currentUtteranceRef.current) currentUtteranceRef.current.onend = null;
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      setIsPaused(false);
+    } else {
+      // Always restart from the beginning of the current track
+      playTrack(currentTrackIdx);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentTrackIdx + 1 < tracks.length) {
+      playTrack(currentTrackIdx + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentTrackIdx - 1 >= 0) {
+      playTrack(currentTrackIdx - 1);
+    } else {
+      playTrack(0); // Restart from beginning
+    }
+  };
+
+  const handleStartPlayer = () => {
+    setShowPlayer(true);
+    if (!isPlaying) {
+      playTrack(0);
+    }
+  };
+
+  const handleClosePlayer = () => {
+    if (currentUtteranceRef.current) currentUtteranceRef.current.onend = null;
+    window.speechSynthesis.cancel();
     
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+    setShowPlayer(false);
+    setIsPlaying(false);
+    setIsPaused(false);
+    setCurrentTrackIdx(0);
   };
 
   const detailItems = selected
@@ -145,23 +234,24 @@ export default function ResultPanel({
                         <p className={styles.detailScientific}>{selected.scientific_name}</p>
                       </div>
                       <button 
-                        onClick={handleSpeak}
+                        onClick={handleStartPlayer}
                         style={{
-                          background: isSpeaking ? "rgba(239, 68, 68, 0.2)" : "rgba(255,255,255,0.1)",
-                          border: `1px solid ${isSpeaking ? "rgba(239, 68, 68, 0.5)" : "rgba(255,255,255,0.2)"}`,
+                          background: showPlayer ? "rgba(34, 197, 94, 0.2)" : "rgba(255,255,255,0.1)",
+                          border: `1px solid ${showPlayer ? "rgba(34, 197, 94, 0.5)" : "rgba(255,255,255,0.2)"}`,
                           borderRadius: "50%",
-                          width: "40px",
-                          height: "40px",
+                          width: "44px",
+                          height: "44px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           cursor: "pointer",
-                          color: isSpeaking ? "#ef4444" : "#fff",
-                          transition: "all 0.2s"
+                          color: showPlayer ? "#4ade80" : "#fff",
+                          transition: "all 0.2s",
+                          boxShadow: showPlayer ? "0 0 15px rgba(34, 197, 94, 0.3)" : "none"
                         }}
-                        title={isSpeaking ? "Stop reading" : "Read aloud"}
+                        title={lang === "en" ? "Listen to Details" : "ฟังรายละเอียด"}
                       >
-                        {isSpeaking ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                        <Play size={22} style={{ marginLeft: "3px" }} />
                       </button>
                     </div>
 
@@ -280,6 +370,94 @@ export default function ResultPanel({
           </div>
         </section>
       )}
+
+      {showPlayer && tracks.length > 0 && typeof document !== "undefined" && createPortal(
+        <div style={{
+          position: "fixed",
+          bottom: "32px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "calc(100% - 32px)",
+          maxWidth: "420px",
+          background: "rgba(20, 20, 20, 0.85)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "16px",
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset",
+          zIndex: 99999,
+          animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ 
+                width: "36px", height: "36px", 
+                borderRadius: "8px", 
+                background: "linear-gradient(135deg, #4ade80, #c8a84b)",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <Headphones size={20} color="#111" />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <span style={{ fontSize: "11px", color: "#4ade80", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  {lang === "en" ? "Now Playing" : "กำลังเล่น"}
+                </span>
+                <span style={{ fontSize: "14px", color: "#fff", fontWeight: "500", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", maxWidth: "200px" }}>
+                  {tracks[currentTrackIdx]?.title}
+                </span>
+              </div>
+            </div>
+            <button onClick={handleClosePlayer} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer" }}>
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
+            <button 
+              onClick={handlePrev} 
+              disabled={currentTrackIdx === 0}
+              style={{ background: "none", border: "none", color: currentTrackIdx === 0 ? "rgba(255,255,255,0.2)" : "#fff", cursor: currentTrackIdx === 0 ? "default" : "pointer" }}
+            >
+              <SkipBack size={24} />
+            </button>
+            <button 
+              onClick={handleTogglePlay}
+              style={{ 
+                width: "48px", height: "48px", 
+                borderRadius: "50%", 
+                background: "#fff", 
+                border: "none", 
+                color: "#000", 
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(255,255,255,0.2)"
+              }}
+            >
+              {isPlaying ? <Pause size={24} /> : <Play size={24} style={{ marginLeft: "3px" }} />}
+            </button>
+            <button 
+              onClick={handleNext}
+              disabled={currentTrackIdx === tracks.length - 1}
+              style={{ background: "none", border: "none", color: currentTrackIdx === tracks.length - 1 ? "rgba(255,255,255,0.2)" : "#fff", cursor: currentTrackIdx === tracks.length - 1 ? "default" : "pointer" }}
+            >
+              <SkipForward size={24} />
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: "4px", width: "100%", height: "4px", marginTop: "4px" }}>
+            {tracks.map((_, idx) => (
+              <div key={idx} style={{ 
+                flex: 1, 
+                background: idx === currentTrackIdx ? "#4ade80" : "rgba(255,255,255,0.2)",
+                borderRadius: "2px",
+                transition: "background 0.3s"
+              }} />
+            ))}
+          </div>
+        </div>
+      , document.body)}
     </div>
   );
 }
