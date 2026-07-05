@@ -11,8 +11,8 @@ interface UploadPanelProps {
   isLoading: boolean;
   previewUrl: string | null;
   image: File | null;
-  fileRef: React.RefObject<HTMLInputElement>;
-  cameraRef: React.RefObject<HTMLInputElement>;
+  fileRef: React.RefObject<HTMLInputElement | null>;
+  cameraRef: React.RefObject<HTMLInputElement | null>;
   processFile: (file: File | undefined) => void;
   handleIdentify: () => void;
 }
