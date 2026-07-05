@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Faunafy - AI-Powered Animal Identifier 🐾
 
-## Getting Started
+Welcome to **Faunafy**, a modern, responsive web application built to identify animals from images using advanced AI. This project demonstrates proficiency in modern web development frameworks, AI integration, and user-centric UI/UX design. It is built as a showcase of front-end engineering skills and modern web development practices.
 
-First, run the development server:
+## 🌟 Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **AI-Powered Identification:** Leverages Google's Generative AI (Gemini) to accurately identify animals from uploaded images or camera captures.
+- **Bilingual Support:** Seamlessly switch between English and Thai languages.
+- **Local History & Favorites:** Automatically saves prediction history directly in the browser using `localforage` for a fast, database-free user experience. Users can also pin their favorite identifications.
+- **Interactive & Animated UI:** Features a dynamic interface with smooth transitions, sliding panels, and a custom "Forest Decoration" background for a highly immersive experience.
+- **Responsive Design:** Fully responsive layout with a Sidebar for desktop and a Bottom Navigation bar for mobile devices.
+- **Error Handling & Rate Limiting:** Built-in safeguards for API rate limits and network errors with toast notifications.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Technologies Used
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework:** [Next.js](https://nextjs.org/) (App Router, Version 16+)
+- **Library:** [React 19](https://react.dev/)
+- **Language:** TypeScript
+- **Styling:** CSS Modules for scoped, modular styling.
+- **AI Integration:** `@google/generative-ai`
+- **Local Storage:** `localforage` (IndexedDB wrapper)
+- **Icons:** `lucide-react`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Getting Started
 
-## Learn More
+Follow these steps to run the project locally.
 
-To learn more about Next.js, take a look at the following resources:
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm, yarn, pnpm, or bun
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository** (if applicable):
+   ```bash
+   git clone <repository-url>
+   cd animal-identifier
+   ```
 
-## Deploy on Vercel
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Set up environment variables:**
+   Create a `.env.local` file in the root directory and add your Google Gemini API key:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application in action.
+
+## 📁 Project Structure
+
+- `/app` - Next.js App Router containing the main pages and API routes (`/api/identify`).
+- `/components` - Reusable UI components (Sidebar, BottomNav, UploadPanel, ResultPanel, HistoryPanel, SettingsPanel, ForestDecoration).
+- `/lib` - Core logic and utilities, including the local history management (`history.ts`).
+- `/types` - TypeScript type definitions (`animal.ts`).
+- `/public` - Static assets.
+
+## 🎯 Purpose
+
+This project was developed to showcase my skills as a Front-end / Full-stack Developer, particularly in:
+- Integrating external AI APIs into a web application.
+- Managing complex component state and local storage in React.
+- Building polished, accessible, and responsive user interfaces from scratch using CSS Modules.
+
+---
+*Created as a portfolio project for internship applications.*

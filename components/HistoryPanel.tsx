@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HistoryRecord, getAllHistoryRecords } from "@/lib/history";
+import { HistoryRecord, getAllHistoryRecords, toggleSaveStatus } from "@/lib/history";
 import styles from "@/app/page.module.css";
 import { Clock, Heart, Inbox } from "lucide-react";
 
@@ -52,7 +52,7 @@ export default function HistoryPanel({ lang, showSavedOnly, onSelectRecord }: Hi
         </p>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", marginTop: "20px" }}>
+      <div style={{ flex: 1, overflowY: "auto", marginTop: "20px", width: "100%", alignSelf: "stretch" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px", color: "rgba(255,255,255,0.6)" }}>
             Loading...
@@ -65,9 +65,13 @@ export default function HistoryPanel({ lang, showSavedOnly, onSelectRecord }: Hi
         ) : (
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", 
+            gridTemplateColumns: "repeat(auto-fill, minmax(150px, 200px))", 
             gap: "16px",
-            padding: "10px"
+            padding: "10px",
+            width: "100%",
+            maxWidth: "1000px",
+            margin: "0 auto",
+            justifyContent: "center"
           }}>
             {records.map((r) => {
               const mainCandidate = r.result.candidates?.[0];
@@ -95,8 +99,15 @@ export default function HistoryPanel({ lang, showSavedOnly, onSelectRecord }: Hi
                 >
                   <img src={imgUrl} alt="History" style={{ width: "100%", height: "120px", objectFit: "cover" }} />
                   {r.isSaved && (
-                    <div style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.5)", borderRadius: "50%", padding: "4px" }}>
-                      <Heart size={14} color="#ef4444" fill="#ef4444" />
+                    <div 
+                      className={styles.historyFavBtn}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await toggleSaveStatus(r.id);
+                        window.dispatchEvent(new Event("faunafy_history_updated"));
+                      }}
+                    >
+                      <Heart size={14} color="#ff4757" fill="#ff4757" className={styles.historyFavIcon} />
                     </div>
                   )}
                   <div style={{ padding: "12px" }}>
