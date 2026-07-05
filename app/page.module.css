@@ -981,50 +981,67 @@
   overflow: hidden;
 }
 
-/* ═══ MULTI-LAYER PARALLAX ════════════════════════════ */
-.parallaxContainer {
-  position: fixed;
-  inset: -60px; /* Oversize to prevent edges showing when moving */
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.parallaxLayer {
+/* Left side forest image */
+.vineLeft {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  left: 0;
+  top: 0;
+  width: 280px;
   height: 100%;
   will-change: transform;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  transition: none;
+  -webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%);
+  mask-image: linear-gradient(to right, black 55%, transparent 100%);
+  background-color: #080e06;
 }
 
-/* Fullscreen transparent PNG frames */
-.parallaxLayer img {
+/* Right side forest image (scaleX(-1) applied inline by JS) */
+.vineRight {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 280px;
+  height: 100%;
+  will-change: transform;
+  transition: none;
+  transform-origin: right center;
+  -webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%);
+  mask-image: linear-gradient(to right, black 55%, transparent 100%);
+  background-color: #080e06;
+}
+
+/* The actual forest image */
+.forestImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: left center;
+  display: block;
   user-select: none;
   pointer-events: none;
+  opacity: 0.92;
+  mix-blend-mode: multiply;
 }
 
-/* Fallback/Layer specifics */
-.layerBack {
-  opacity: 0.5;
-  filter: blur(2px) brightness(0.7);
+/* Top leaf cluster */
+.leafTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 210px;
+  opacity: 0.65;
 }
 
-.layerMid {
-  opacity: 0.8;
-  filter: blur(0.5px) brightness(0.85);
-}
-
-.layerFront {
-  opacity: 1;
-  filter: brightness(1);
+/* Bottom leaf cluster */
+.leafBottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 160px;
+  opacity: 0.4;
+  transform: scaleY(-1);
 }
 
 /* Individual floating leaf animations */
