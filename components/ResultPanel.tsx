@@ -209,32 +209,7 @@ export default function ResultPanel({
                     </div>
                   )}
 
-                  {result.candidates.length > 1 && (
-                    <div className={styles.similarSpeciesSection}>
-                      <div className={styles.similarSpeciesHeader}>
-                        <h3 className={styles.similarSpeciesTitle}>
-                          {lang === "en" ? "Other Possibilities" : "สายพันธุ์อื่นที่ใกล้เคียง"}
-                        </h3>
-                      </div>
-                      <div className={styles.similarSpeciesList}>
-                        {result.candidates.map((candidate, idx) => {
-                          if (idx === selectedIdx) return null;
-                          return (
-                            <SpeciesThumbnail 
-                              key={idx} 
-                              candidate={candidate} 
-                              lang={lang} 
-                              onClick={() => {
-                                setSelectedIdx(idx);
-                                // Scroll to top of results
-                                document.querySelector(`.${styles.resultsPanel}`)?.scrollTo({ top: 0, behavior: 'smooth' });
-                              }} 
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  {/* Similar Species section removed to optimize API speed */}
                 </div>
               </>
             ) : (
