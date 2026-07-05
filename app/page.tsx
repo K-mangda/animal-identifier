@@ -72,6 +72,7 @@ function ForestCanvas() {
     interface Firefly {
       x: number; y: number;
       vx: number; vy: number;
+      rx: number; ry: number;
       r: number;
       alpha: number; alphaDir: number;
       hue: number; // 80-140 green range
@@ -83,6 +84,7 @@ function ForestCanvas() {
       y: Math.random() * H,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.4,
+      rx: 0, ry: 0,
       r: Math.random() * 1.8 + 0.8,
       alpha: Math.random(),
       alphaDir: Math.random() > 0.5 ? 1 : -1,
@@ -178,18 +180,26 @@ function ForestCanvas() {
         const spd = Math.sqrt(f.vx * f.vx + f.vy * f.vy);
         if (spd > 0.9) { f.vx = (f.vx / spd) * 0.9; f.vy = (f.vy / spd) * 0.9; }
 
-        // Mouse repulsion
+        // Smooth Mouse Repulsion
         const dx = f.x - mx;
         const dy = f.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        let targetRx = 0;
+        let targetRy = 0;
         if (dist < REPEL_RADIUS && dist > 0) {
-          const force = (REPEL_RADIUS - dist) / REPEL_RADIUS;
-          f.vx += (dx / dist) * force * REPEL_FORCE * 0.08;
-          f.vy += (dy / dist) * force * REPEL_FORCE * 0.08;
+          // Smooth falloff curve
+          const force = Math.pow((REPEL_RADIUS - dist) / REPEL_RADIUS, 1.5);
+          targetRx = (dx / dist) * force * REPEL_FORCE * 1.5;
+          targetRy = (dy / dist) * force * REPEL_FORCE * 1.5;
         }
 
-        f.x += f.vx;
-        f.y += f.vy;
+        // Lerp rx,ry to target (removes jerkiness)
+        f.rx += (targetRx - f.rx) * 0.15;
+        f.ry += (targetRy - f.ry) * 0.15;
+
+        f.x += f.vx + f.rx;
+        f.y += f.vy + f.ry;
 
         // Wrap edges
         if (f.x < -10) f.x = W + 10;
@@ -225,20 +235,23 @@ function ForestCanvas() {
         l.wobble += l.wobbleSpeed;
         const windX = Math.sin(l.wobble) * 0.5;
 
-        // Mouse repulsion for leaves
+        // Smooth Mouse repulsion for leaves
         const dx = l.x - mx;
         const dy = l.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        let targetRx = 0;
+        let targetRy = 0;
         if (dist < REPEL_RADIUS && dist > 0) {
-          const force = (REPEL_RADIUS - dist) / REPEL_RADIUS;
-          l.rx += (dx / dist) * force * REPEL_FORCE * 0.12;
-          l.ry += (dy / dist) * force * REPEL_FORCE * 0.12;
-          l.angularV += force * 0.04;
+          const force = Math.pow((REPEL_RADIUS - dist) / REPEL_RADIUS, 1.5);
+          targetRx = (dx / dist) * force * REPEL_FORCE * 2;
+          targetRy = (dy / dist) * force * REPEL_FORCE * 2;
+          l.angularV += (dx / dist) * force * 0.01;
         }
 
-        // Decay repulsion velocity
-        l.rx *= 0.92;
-        l.ry *= 0.92;
+        // Smoothly interpolate to target (removes jerkiness)
+        l.rx += (targetRx - l.rx) * 0.15;
+        l.ry += (targetRy - l.ry) * 0.15;
 
         l.x += l.vx + windX + l.rx;
         l.y += l.vy + l.ry;
@@ -283,13 +296,15 @@ function ForestCanvas() {
   );
 }
 
-/* ─── Forest Image + Mouse Parallax ──────────────────── */
+/* ─── Multi-Layer Parallax Forest ──────────────────────── */
 function ForestDecoration() {
-  const leftRef  = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
-  const mouse    = useRef({ x: 0.5, y: 0.5 });
-  const current  = useRef({ x: 0.5, y: 0.5 });
-  const rafRef   = useRef<number>(0);
+  const backRef = useRef<HTMLDivElement>(null);
+  const midRef = useRef<HTMLDivElement>(null);
+  const frontRef = useRef<HTMLDivElement>(null);
+  
+  const mouse = useRef({ x: 0.5, y: 0.5 });
+  const current = useRef({ x: 0.5, y: 0.5 });
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -301,22 +316,18 @@ function ForestDecoration() {
     window.addEventListener("mousemove", onMove);
 
     const tick = () => {
-      // Smooth lerp toward actual mouse position
-      const LERP = 0.055;
+      // Smooth lerp
+      const LERP = 0.05;
       current.current.x += (mouse.current.x - current.current.x) * LERP;
       current.current.y += (mouse.current.y - current.current.y) * LERP;
 
-      // Parallax offset: ±18px horizontal, ±10px vertical
-      const dx = (current.current.x - 0.5) * 36;
-      const dy = (current.current.y - 0.5) * 20;
+      const dx = (current.current.x - 0.5);
+      const dy = (current.current.y - 0.5);
 
-      if (leftRef.current) {
-        // Left forest moves opposite to mouse (mouse right → forest nudges left = feels anchored)
-        leftRef.current.style.transform = `translateX(${-dx * 0.5}px) translateY(${dy * 0.4}px)`;
-      }
-      if (rightRef.current) {
-        rightRef.current.style.transform = `scaleX(-1) translateX(${-dx * 0.5}px) translateY(${dy * 0.4}px)`;
-      }
+      // Different speeds for depth effect
+      if (backRef.current) backRef.current.style.transform = `translate(${dx * -10}px, ${dy * -5}px)`;
+      if (midRef.current) midRef.current.style.transform = `translate(${dx * -25}px, ${dy * -12}px)`;
+      if (frontRef.current) frontRef.current.style.transform = `translate(${dx * -45}px, ${dy * -22}px)`;
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -331,27 +342,23 @@ function ForestDecoration() {
   return (
     <>
       <ForestCanvas />
-      <div className={styles.forestDecor} aria-hidden="true">
-        {/* Left forest */}
-        <div ref={leftRef} className={styles.vineLeft}>
+      <div className={styles.parallaxContainer} aria-hidden="true">
+        {/* Layer 1: Background (slowest, blurred) */}
+        <div ref={backRef} className={`${styles.parallaxLayer} ${styles.layerBack}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/forest-side.png"
-            alt=""
-            className={styles.forestImg}
-            draggable={false}
-          />
+          <img src="/parallax-back.png" alt="" onError={(e) => e.currentTarget.style.display = 'none'} />
+        </div>
+        
+        {/* Layer 2: Midground */}
+        <div ref={midRef} className={`${styles.parallaxLayer} ${styles.layerMid}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/parallax-mid.png" alt="" onError={(e) => e.currentTarget.style.display = 'none'} />
         </div>
 
-        {/* Right forest (mirrored via CSS scaleX(-1)) */}
-        <div ref={rightRef} className={styles.vineRight}>
+        {/* Layer 3: Foreground (fastest, sharpest) */}
+        <div ref={frontRef} className={`${styles.parallaxLayer} ${styles.layerFront}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/forest-side.png"
-            alt=""
-            className={styles.forestImg}
-            draggable={false}
-          />
+          <img src="/parallax-front.png" alt="" onError={(e) => e.currentTarget.style.display = 'none'} />
         </div>
       </div>
     </>

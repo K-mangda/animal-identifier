@@ -981,67 +981,50 @@
   overflow: hidden;
 }
 
-/* Left side forest image */
-.vineLeft {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 280px;
-  height: 100%;
-  will-change: transform;
-  transition: none;
-  -webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%);
-  mask-image: linear-gradient(to right, black 55%, transparent 100%);
-  background-color: #080e06;
+/* ═══ MULTI-LAYER PARALLAX ════════════════════════════ */
+.parallaxContainer {
+  position: fixed;
+  inset: -60px; /* Oversize to prevent edges showing when moving */
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
 }
 
-/* Right side forest image (scaleX(-1) applied inline by JS) */
-.vineRight {
+.parallaxLayer {
   position: absolute;
-  right: 0;
-  top: 0;
-  width: 280px;
+  inset: 0;
+  width: 100%;
   height: 100%;
   will-change: transform;
-  transition: none;
-  transform-origin: right center;
-  -webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%);
-  mask-image: linear-gradient(to right, black 55%, transparent 100%);
-  background-color: #080e06;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* The actual forest image */
-.forestImg {
+/* Fullscreen transparent PNG frames */
+.parallaxLayer img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: left center;
-  display: block;
+  object-position: center;
   user-select: none;
   pointer-events: none;
-  opacity: 0.92;
-  mix-blend-mode: multiply;
 }
 
-/* Top leaf cluster */
-.leafTop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 210px;
-  opacity: 0.65;
+/* Fallback/Layer specifics */
+.layerBack {
+  opacity: 0.5;
+  filter: blur(2px) brightness(0.7);
 }
 
-/* Bottom leaf cluster */
-.leafBottom {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 160px;
-  opacity: 0.4;
-  transform: scaleY(-1);
+.layerMid {
+  opacity: 0.8;
+  filter: blur(0.5px) brightness(0.85);
+}
+
+.layerFront {
+  opacity: 1;
+  filter: brightness(1);
 }
 
 /* Individual floating leaf animations */
