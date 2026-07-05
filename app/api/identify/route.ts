@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Using gemini-3.1-pro for maximum reasoning and accuracy
-    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
 
     const prompt = `
       You are an expert zoologist, herpetologist, and wildlife biologist.
