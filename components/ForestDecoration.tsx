@@ -127,6 +127,7 @@ function ForestCanvas() {
 
     let t = 0;
     function frame() {
+      if (!ctx) return;
       ctx.clearRect(0, 0, W, H);
       t += 0.016;
       const mx = mouseRef.current.x;
