@@ -830,8 +830,56 @@ body::before {
 }
 
 @media (min-width: 900px) {
-  .slidePanel { padding: 3rem 4.5rem 3rem; }
+  .slideViewport {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .slidePanel {
+    position: relative;
+    height: 100%;
+    padding: 3rem;
+  }
+
+  .uploadPanel {
+    width: 100%;
+    max-width: 800px;
+    flex-shrink: 0;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .uploadPanel.panelSlideLeft {
+    width: 42%;
+    max-width: 550px;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    padding-right: 2.5rem;
+  }
+
+  .resultPanel {
+    width: 0;
+    opacity: 0;
+    padding: 0;
+    transform: none;
+    overflow: hidden;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease, padding 0.5s ease;
+  }
+  .resultPanel.panelSlideCenter {
+    width: 58%;
+    max-width: 900px;
+    opacity: 1;
+    transform: none;
+    padding: 3rem 3rem 3rem 2.5rem;
+    pointer-events: auto;
+    overflow-y: auto;
+  }
+
   .detailGrid { grid-template-columns: repeat(2, 1fr); }
+  .backBtn { display: none; }
 }
 
 /* ═══ ANIMATIONS ══════════════════════════════════════ */
