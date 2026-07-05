@@ -184,6 +184,9 @@ function ForestCanvas() {
       }
 
       // ── Draw & update falling leaves ──
+      ctx.save();
+      ctx.filter = "blur(1.5px)"; // Make leaves slightly out of focus
+      
       for (const l of leaves) {
         // Wobble horizontal drift (simulates air)
         l.wobble += l.wobbleSpeed;
@@ -216,8 +219,10 @@ function ForestCanvas() {
           l.width = l.len * 0.42;
         }
 
-        drawLeaf(ctx, l.x, l.y, l.len, l.width, l.angle, l.r, l.g, l.b, l.alpha);
+        // Apply a slightly reduced alpha multiplier to make them less sharp
+        drawLeaf(ctx, l.x, l.y, l.len, l.width, l.angle, l.r, l.g, l.b, l.alpha * 0.6);
       }
+      ctx.restore();
 
       animRef.current = requestAnimationFrame(frame);
     }
