@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function ForestCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -279,9 +279,23 @@ export default function ForestDecoration() {
     };
   }, []);
 
+  const [enabled, setEnabled] = useState(true);
+
+  useEffect(() => {
+    const checkSettings = () => {
+      const saved = localStorage.getItem("faunafy_animations");
+      if (saved !== null) {
+        setEnabled(saved === "true");
+      }
+    };
+    checkSettings();
+    window.addEventListener("faunafy_settings_changed", checkSettings);
+    return () => window.removeEventListener("faunafy_settings_changed", checkSettings);
+  }, []);
+
   return (
     <>
-      <ForestCanvas />
+      {enabled && <ForestCanvas />}
     </>
   );
 }

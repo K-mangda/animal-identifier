@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     description:
       "Identify any animal instantly using Google Gemini AI. Upload a photo to get species details, conservation status, habitat, and fascinating facts.",
     type: "website",
+    images: ["/og-image.png"],
   },
 };
 

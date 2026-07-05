@@ -1,4 +1,4 @@
-import { ArrowLeft, MapPin, Utensils, Globe, Clock3, Scale, Activity, Leaf, ShieldAlert, Info } from "lucide-react";
+import { ArrowLeft, MapPin, Utensils, Globe, Clock3, Scale, Activity, Leaf, ShieldAlert, Info, Heart } from "lucide-react";
 import styles from "@/app/page.module.css";
 import PawIcon from "@/components/icons/PawIcon";
 import ConservationBadge from "@/components/ConservationBadge";
@@ -13,6 +13,9 @@ interface ResultPanelProps {
   selectedIdx: number;
   setSelectedIdx: (idx: number) => void;
   previewUrl: string | null;
+  historyId: string | null;
+  isSaved: boolean;
+  onToggleSave: () => void;
   handleBack: () => void;
   handleReset: () => void;
 }
@@ -25,6 +28,9 @@ export default function ResultPanel({
   selectedIdx,
   setSelectedIdx,
   previewUrl,
+  historyId,
+  isSaved,
+  onToggleSave,
   handleBack,
   handleReset,
 }: ResultPanelProps) {
@@ -54,8 +60,22 @@ export default function ResultPanel({
           <div className={styles.logoIcon}><PawIcon size={17} /></div>
           <span className={styles.logoText}>FAUNAFY</span>
         </div>
-        {/* Spacer for symmetry */}
-        <div style={{ width: 72 }} aria-hidden="true" />
+        <div style={{ width: 72 }} aria-hidden="true">
+          {historyId && (
+            <button 
+              onClick={onToggleSave} 
+              style={{
+                background: "transparent", border: "none", cursor: "pointer", 
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "40px", height: "40px", borderRadius: "50%",
+                backgroundColor: isSaved ? "rgba(239, 68, 68, 0.1)" : "rgba(255,255,255,0.05)"
+              }}
+              title={isSaved ? "Remove from saved" : "Save this result"}
+            >
+              <Heart size={20} color={isSaved ? "#ef4444" : "#fff"} fill={isSaved ? "#ef4444" : "none"} />
+            </button>
+          )}
+        </div>
       </div>
 
       {result && (
