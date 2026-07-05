@@ -1,66 +1,429 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useState, useRef } from "react";
+import {
+  Home, Clock, Heart, Settings, Camera,
+  MapPin, Utensils, Globe, Clock3,
+  AlertTriangle, Info, CheckCircle2, ArrowUpRight, ArrowLeft,
+} from "lucide-react";
+import styles from "./page.module.css";
+import { AnimalCandidate, IdentifyResult } from "../types/animal";
+
+/* ─── IUCN Badge ──────────────────────────────────────── */
+const IUCN: Record<string, string> = {
+  LC: "Least Concern", NT: "Near Threatened", VU: "Vulnerable",
+  EN: "Endangered", CR: "Critically Endangered",
+  EW: "Extinct in Wild", EX: "Extinct",
+};
+
+function ConservationBadge({ status }: { status: string }) {
+  const code = (status ?? "").toUpperCase();
+  const label = IUCN[code] ?? code;
+  const danger = ["VU", "EN", "CR", "EW", "EX"].includes(code);
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <span className={styles.conservationBadge} data-status={code} title={`IUCN Red List: ${label}`}>
+      {danger ? <AlertTriangle size={10} /> : <CheckCircle2 size={10} />}
+      {code} · {label}
+    </span>
+  );
+}
+
+/* ─── Paw SVG ─────────────────────────────────────────── */
+function PawIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
+      <path d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z" />
+    </svg>
+  );
+}
+
+/* ─── Main Page ───────────────────────────────────────── */
+export default function HomePage() {
+  const [view, setView] = useState<"upload" | "result">("upload");
+  const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<IdentifyResult | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [activeNav, setActiveNav] = useState<"home" | "history" | "saved" | "settings">("home");
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  const selected: AnimalCandidate | null = result?.candidates?.[selectedIdx] ?? null;
+
+  const processFile = (file: File | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setResult(null);
+    setSelectedIdx(0);
+  };
+
+  const handleIdentify = async () => {
+    if (!image) return;
+    setIsLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(image);
+      reader.onloadend = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        try {
+          const res = await fetch("/api/identify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64, mimeType: image.type }),
+          });
+          if (!res.ok) throw new Error(`${res.status}`);
+          const data: IdentifyResult = await res.json();
+          setResult(data);
+          setSelectedIdx(0);
+          setView("result"); // ← triggers the slide!
+        } catch (e) {
+          console.error(e);
+          alert("❌ Could not connect to AI. Please check your GEMINI_API_KEY.");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+    } catch (e) {
+      console.error(e);
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack = () => setView("upload");
+
+  const handleReset = () => {
+    setImage(null);
+    setPreviewUrl(null);
+    setResult(null);
+    setView("upload");
+  };
+
+  const navItems = [
+    { id: "home" as const,     icon: <Home size={20} />,     label: "Home" },
+    { id: "history" as const,  icon: <Clock size={20} />,    label: "History" },
+    { id: "saved" as const,    icon: <Heart size={20} />,    label: "Saved" },
+    { id: "settings" as const, icon: <Settings size={20} />, label: "Settings" },
+  ];
+
+  const detailItems = selected
+    ? [
+        { icon: <MapPin size={14} />,   label: "Habitat",  value: selected.habitat },
+        { icon: <Utensils size={14} />, label: "Diet",     value: selected.diet },
+        { icon: <Clock3 size={14} />,   label: "Lifespan", value: selected.lifespan },
+        { icon: <Globe size={14} />,    label: "Range",    value: selected.geographic_range },
+      ]
+    : [];
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.appWindow}>
+
+        {/* ── Desktop Sidebar ── */}
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarLogo}>
+            <svg className={styles.sidebarCorners} viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="cornerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00e5ff" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
+              <path d="M 16 2 L 14 2 A 12 12 0 0 0 2 14 L 2 16" stroke="url(#cornerGrad)" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M 28 2 L 30 2 A 12 12 0 0 1 42 14 L 42 16" stroke="url(#cornerGrad)" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M 16 42 L 14 42 A 12 12 0 0 1 2 30 L 2 28" stroke="url(#cornerGrad)" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M 28 42 L 30 42 A 12 12 0 0 0 42 30 L 42 28" stroke="url(#cornerGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+            <PawIcon size={24} />
+          </div>
+          <nav className={styles.sidebarNav}>
+            {navItems.map(({ id, icon }) => (
+              <button
+                key={id}
+                id={`sidebar-nav-${id}`}
+                className={`${styles.navItem} ${activeNav === id ? styles.active : ""}`}
+                onClick={() => setActiveNav(id)}
+                aria-label={id}
+              >
+                {icon}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* ── Slide Viewport (clips the animation) ── */}
+        <div className={styles.slideViewport}>
+
+          {/* ════ Panel 1 — Upload ════ */}
+          <div
+            className={`${styles.slidePanel} ${styles.uploadPanel} ${view === "result" ? styles.panelSlideLeft : ""}`}
+            aria-hidden={view === "result"}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {/* Logo row */}
+            <div className={styles.headerRow}>
+              <div className={styles.logoMark}>
+                <div className={styles.logoIcon}><PawIcon size={17} /></div>
+                <span className={styles.logoText}>FAUNAFY</span>
+              </div>
+              <button className={styles.headerExitBtn} aria-label="Share">
+                <ArrowUpRight size={15} />
+              </button>
+            </div>
+
+            {/* Title */}
+            <div className={styles.header}>
+              <h1 className={styles.title}>What is this animal?</h1>
+              <p className={styles.subtitle}>
+                Simply upload or capture an image to identify the species.
+              </p>
+            </div>
+
+            {/* Hidden file inputs */}
+            <input id="file-upload-input" type="file" ref={fileRef} accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => e.target.files && processFile(e.target.files[0])} />
+            <input id="camera-capture-input" type="file" ref={cameraRef}
+              accept="image/*" capture="environment" style={{ display: "none" }}
+              onChange={(e) => e.target.files && processFile(e.target.files[0])} />
+
+            {/* Dropzone */}
+            <div
+              id="image-dropzone"
+              className={`${styles.dropzone} ${isDragging ? styles.dropzoneActive : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                e.dataTransfer.files?.[0] && processFile(e.dataTransfer.files[0]);
+              }}
+              onClick={() => fileRef.current?.click()}
+              role="button" tabIndex={0} aria-label="Upload animal image"
+              onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
+            >
+              {previewUrl ? (
+                <div className={styles.previewWrapper}>
+                  <div className={styles.previewImageContainer}>
+                    <img src={previewUrl} alt="Selected preview" className={`${styles.previewImage} ${isLoading ? styles.scanningImage : ""}`} />
+                    
+                    {isLoading ? (
+                      <>
+                        <div className={styles.scanLine} />
+                        <div className={`${styles.scanCorner} ${styles.tl}`} />
+                        <div className={`${styles.scanCorner} ${styles.tr}`} />
+                        <div className={`${styles.scanCorner} ${styles.bl}`} />
+                        <div className={`${styles.scanCorner} ${styles.br}`} />
+                      </>
+                    ) : (
+                      <div className={styles.previewOverlay}>
+                        <button id="change-photo-btn" className={styles.changePhotoBtn}
+                          onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}>
+                          Change Photo
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {isLoading && (
+                    <div className={styles.scanTextGroup}>
+                      <p className={styles.scanTitle}>Scanning Species</p>
+                      <p className={styles.scanDots}>AI is analyzing the image…</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.dropzoneEmptyContent}>
+                  <div className={styles.dropzoneIconWrap}>
+                    <div className={styles.dropzonePaw}><PawIcon size={44} /></div>
+                    <Camera size={16} className={styles.dropzoneCamera} />
+                  </div>
+                  <h2 className={styles.dropzoneTitle}>Drop an image or click to upload</h2>
+                  <p className={styles.dropzoneText}>Supported: JPG, PNG, WEBP · Max 10 MB</p>
+                </div>
+              )}
+            </div>
+
+            {/* Camera / OR row */}
+            <div className={styles.cameraRow}>
+              <div className={styles.orDivider} />
+              <span className={styles.orText}>or</span>
+              <button id="camera-capture-btn" className={styles.btnCamera}
+                onClick={() => cameraRef.current?.click()} aria-label="Use camera">
+                <Camera size={14} /> Use Camera
+              </button>
+              <div className={styles.orDivider} />
+            </div>
+
+            {/* Identify button */}
+            <div className={styles.btnRow}>
+              <button id="identify-animal-btn" className="btn-primary"
+                onClick={handleIdentify} disabled={!image || isLoading}>
+                {isLoading ? "Analyzing..." : "Identify Animal"}
+              </button>
+            </div>
+
+
+          </div>
+
+          {/* ════ Panel 2 — Result ════ */}
+          <div
+            className={`${styles.slidePanel} ${styles.resultPanel} ${view === "result" ? styles.panelSlideCenter : ""}`}
+            aria-hidden={view === "upload"}
           >
-            Documentation
-          </a>
+            {/* Result header row */}
+            <div className={styles.headerRow}>
+              <button className={styles.backBtn} onClick={handleBack} aria-label="Go back">
+                <ArrowLeft size={15} />
+                <span>Back</span>
+              </button>
+              <div className={styles.logoMark}>
+                <div className={styles.logoIcon}><PawIcon size={17} /></div>
+                <span className={styles.logoText}>FAUNAFY</span>
+              </div>
+              {/* Spacer for symmetry */}
+              <div style={{ width: 72 }} aria-hidden="true" />
+            </div>
+
+            {result && (
+              <section className={styles.resultsArea} aria-label="Identification result">
+                <div className={styles.resultsPanel}>
+                  <div className={styles.panelHandle} />
+
+                  <div className={styles.resultsHeader}>
+                    <h2 className={styles.resultsTitle}>Species Details</h2>
+                    <button className={styles.collapseBtn} aria-label="Collapse">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 15 12 9 6 15" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {result.is_animal && (result.candidates?.length ?? 0) > 0 ? (
+                    <>
+                      {/* Cards row */}
+                      <div className={styles.cardsRow}>
+                        {result.candidates.map((c, i) => (
+                          <div
+                            key={i}
+                            role="button" tabIndex={0}
+                            className={`${styles.speciesCard} ${selectedIdx === i ? styles.cardActive : ""}`}
+                            onClick={() => setSelectedIdx(i)}
+                            onKeyDown={(e) => e.key === "Enter" && setSelectedIdx(i)}
+                            aria-label={`Select ${c.common_name_en}`}
+                            aria-pressed={selectedIdx === i}
+                          >
+                            <div className={styles.cardImagePlaceholder}>
+                              {i === 0 && previewUrl ? (
+                                <img src={previewUrl} alt={c.common_name_en} className={styles.cardImage} />
+                              ) : (
+                                <div className={styles.cardImageFallback}>
+                                  {c.common_name_en?.[0] ?? "?"}
+                                </div>
+                              )}
+                            </div>
+                            <div className={styles.cardContent}>
+                              <h3 className={styles.cardTitle}>{i + 1}. {c.common_name_en}</h3>
+                              <p className={styles.cardMatch}>{c.confidence_percentage}% Match</p>
+                              <div className={styles.cardFooter}>
+                                <span className={styles.viewInfoText}>View Info</span>
+                                <button className={styles.arrowBtn} tabIndex={-1} aria-hidden="true">→</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Detail expands on card click */}
+                      {selected && (
+                        <div className={styles.detailPanel}>
+                          <div className={styles.detailNameBlock}>
+                            <h2 className={`${styles.detailNameEn} text-gradient`}>
+                              {selected.common_name_en}
+                            </h2>
+                            {selected.common_name_th && (
+                              <p className={styles.detailNameTh}>{selected.common_name_th}</p>
+                            )}
+                            <p className={styles.detailScientific}>{selected.scientific_name}</p>
+
+                            <div className={styles.detailBadges}>
+                              <span className={styles.confidenceBadge}>
+                                <span className={styles.confidenceDot} />
+                                {selected.confidence_percentage}% Match
+                              </span>
+                              {selected.conservation_status && (
+                                <ConservationBadge status={selected.conservation_status} />
+                              )}
+                              {selected.animal_class && (
+                                <span className={styles.classBadge}>{selected.animal_class}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={styles.detailGrid}>
+                            {detailItems.map((item) =>
+                              item.value ? (
+                                <div key={item.label} className={styles.detailItem}>
+                                  <div className={styles.detailIconWrap}>{item.icon}</div>
+                                  <div>
+                                    <p className={styles.detailLabel}>{item.label}</p>
+                                    <p className={styles.detailValue}>{item.value}</p>
+                                  </div>
+                                </div>
+                              ) : null
+                            )}
+                          </div>
+
+                          {selected.fun_fact && (
+                            <div className={styles.funFactBar}>
+                              <div>
+                                <p className={styles.funFactLabel}>Did you know?</p>
+                                <p className={styles.funFactText}>{selected.fun_fact}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className={styles.notAnimalState}>
+                      <Info size={34} color="rgba(255,255,255,0.18)" />
+                      <h3 className={styles.notAnimalTitle}>No animal detected</h3>
+                      <p className={styles.notAnimalText}>
+                        Try uploading a clearer photo of an animal.
+                      </p>
+                      <button id="try-again-btn" className={styles.btnTryAgain} onClick={handleReset}>
+                        Try Another Image
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+
+          </div>
+
         </div>
-      </main>
+      </div>
+
+      {/* ── Mobile Bottom Nav ── */}
+      <nav className={styles.bottomNav} aria-label="Mobile navigation">
+        {navItems.map(({ id, icon, label }) => (
+          <button
+            key={id}
+            id={`bottom-nav-${id}`}
+            className={`${styles.bottomNavItem} ${activeNav === id ? styles.active : ""}`}
+            onClick={() => setActiveNav(id)}
+            aria-label={label}
+          >
+            {icon}
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
