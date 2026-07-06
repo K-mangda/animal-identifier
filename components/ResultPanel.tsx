@@ -65,6 +65,14 @@ export default function ResultPanel({
     };
   }, []);
 
+  // When language changes, restart the audio to switch voices immediately
+  useEffect(() => {
+    if (isPlaying) {
+      playTrack(currentTrackIdx);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const playTrack = (index: number) => {
     // Clear previous utterance's onend to prevent skip-chaining
     if (currentUtteranceRef.current) {
