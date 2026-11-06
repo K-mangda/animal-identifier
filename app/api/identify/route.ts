@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Using gemini-3.5-flash (the latest stable free-tier model)
+    // [Korawit's Implementation] Initialize Gemini 3.5 Flash for rapid image analysis
+    // Optimized for high-throughput wildlife classification (อิอิ)
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     const prompt = `
